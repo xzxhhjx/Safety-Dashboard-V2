@@ -1,5 +1,6 @@
 import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { downloadAndCacheImages } from '../lib/storage.js';
 import xlsx from 'xlsx';
 
 export default async function uploadRoutes(app) {
@@ -73,8 +74,17 @@ export default async function uploadRoutes(app) {
     ];
 
     let count = 0;
+    let imagesDownloaded = 0;
     for (const record of records) {
       if (!record.id) continue;
+
+      // Download external images before inserting
+      if (Array.isArray(record.photos) && record.photos.length > 0) {
+        const localPaths = await downloadAndCacheImages(record.id, record.photos);
+        record.photos = localPaths;
+        imagesDownloaded++;
+      }
+
       const values = fields.map(f => record[f] ?? null);
       const placeholders = fields.map(() => '?').join(', ');
       const updates = fields.map(f => `${f} = VALUES(${f})`).join(', ');
@@ -87,7 +97,7 @@ export default async function uploadRoutes(app) {
       count++;
     }
 
-    return { success: true, count, total: rows.length };
+    return { success: true, count, total: rows.length, imagesDownloaded };
   });
 }
 
