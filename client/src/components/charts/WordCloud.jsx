@@ -1,0 +1,34 @@
+import BaseChart from './BaseChart';
+import { CHART_COLORS } from '../../config';
+import 'echarts-wordcloud';
+
+export default function WordCloud({ data }) {
+  if (!data?.length) return <div className="chart-container flex items-center justify-center text-gray-600">No data</div>;
+
+  const option = {
+    tooltip: { trigger: 'item' },
+    title: { text: 'Word Cloud', textStyle: { color: '#9CA3AF', fontSize: 14 } },
+    series: [{
+      type: 'wordCloud',
+      shape: 'circle',
+      left: 'center',
+      top: 'center',
+      width: '90%',
+      height: '90%',
+      sizeRange: [14, 48],
+      rotationRange: [-30, 30],
+      rotationStep: 15,
+      gridSize: 8,
+      drawOutOfBound: false,
+      layoutAnimation: true,
+      textStyle: {
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold',
+        color: () => CHART_COLORS[Math.floor(Math.random() * CHART_COLORS.length)],
+      },
+      data: data.map(d => ({ name: d.name, value: d.value })),
+    }],
+  };
+
+  return <div className="chart-container"><BaseChart option={option} /></div>;
+}
