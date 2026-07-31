@@ -40,16 +40,14 @@ export default async function aiRoutes(app) {
     if (!Array.isArray(urls)) urls = [];
 
     let result;
-    if (urls.length > 0) {
-      result = await classifyWithGemini(urls, description, hazardLabel);
-      if (result.confidence === 'low' && result.reasoning && result.reasoning.includes('No readable images')) {
-        result = { ...keywordClassify(description, hazardLabel), confidence: 'low' };
-      }
-    } else {
+    // Always try Gemini first (text-only or with images)
+    result = await classifyWithGemini(urls, description, hazardLabel);
+    if (!result) {
+      // Gemini failed — fall back to keyword
       result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
+    } else {
+      result.method = result.method || 'gemini';
     }
-
-    result.method = result.method || 'gemini';
 
     await pool.query(
       `UPDATE observations SET

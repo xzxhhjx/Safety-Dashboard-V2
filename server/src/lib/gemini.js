@@ -42,33 +42,39 @@ export async function classifyWithGemini(imageUrls, description, hazardLabel) {
   }
 
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-  const imageParts = [];
 
-  for (const url of imageUrls) {
-    if (imageParts.length >= 4) break;
-    try {
-      imageParts.push(await urlToGeminiPart(url));
-    } catch (err) {
-      console.warn(`[gemini] Failed to load image: ${err.message}`);
+  // Try loading images
+  let imageParts = [];
+  if (imageUrls && imageUrls.length > 0) {
+    for (const url of imageUrls) {
+      if (imageParts.length >= 4) break;
+      try {
+        imageParts.push(await urlToGeminiPart(url));
+      } catch (err) {
+        console.warn(`[gemini] Failed to load image: ${err.message}`);
+      }
     }
   }
 
-  if (imageParts.length === 0) {
-    return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: 'No readable images' };
-  }
-
-  const prompt = buildPrompt(description, hazardLabel);
+  const hasImages = imageParts.length > 0;
+  const prompt = buildPrompt(description, hazardLabel, hasImages);
 
   try {
-    const result = await model.generateContent([prompt, ...imageParts]);
+    const parts = hasImages ? [prompt, ...imageParts] : [prompt];
+    const result = await model.generateContent(parts);
     return parseResponse(result.response.text());
   } catch (err) {
     console.error(`[gemini] API error: ${err.message}`);
-    return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: `API error: ${err.message}` };
+    // Fall back to keyword on API error
+    return null;
   }
 }
 
-function buildPrompt(description, hazardLabel) {
+function buildPrompt(description, hazardLabel, hasImages) {
+  const imageNote = hasImages
+    ? 'You are provided with photos of the observation. Trust PHOTOS over text description.'
+    : 'No photos are available — classify based on the description and hazard label alone.';
+
   return `You are a construction site safety inspector AI. Classify into EXACTLY ONE category:
 
 1. Confined Space (有限空间)
@@ -88,11 +94,13 @@ function buildPrompt(description, hazardLabel) {
 15. Environmental (环境)
 16. Others (其他)
 
+${imageNote}
+
 Hazard label: ${hazardLabel || '(none)'}
 Description: ${description || '(none)'}
 
-Trust PHOTOS over text. Return JSON:
-{"category":"...","categoryCN":"...","confidence":"high"|"medium"|"low","reasoning":"Brief Chinese explanation"}`;
+Return JSON:
+{"category":"...","categoryCN":"...","confidence":"high"|"medium"|"low","reasoning":"Brief Chinese explanation of why this category fits"}`;
 }
 
 function parseResponse(text) {
