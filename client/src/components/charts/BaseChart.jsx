@@ -1,8 +1,5 @@
 import { useEffect, useRef } from 'react';
-// NOTE: Using full 'echarts' import for simplicity (~1.3MB).
-// TODO: Switch to modular imports (echarts/core, echarts/charts, echarts/components, echarts/renderers)
-//       to reduce bundle size to ~200-300KB. Register components once in a shared init file.
-import * as echarts from 'echarts';
+import echarts from '../../lib/echarts.js';
 
 export default function BaseChart({ option, height = '400px' }) {
   const ref = useRef(null);

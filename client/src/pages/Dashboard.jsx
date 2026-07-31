@@ -15,8 +15,9 @@ import DataTable from '../components/DataTable';
 export default function Dashboard() {
   const [filters, setFilters] = useState({});
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const { stats, loading: statsLoading } = useStats(filters);
-  const { observations, total, loading: obsLoading } = useObservations(page, filters);
+  const { observations, total, loading: obsLoading } = useObservations(page, pageSize, filters);
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
@@ -43,8 +44,9 @@ export default function Dashboard() {
         data={observations}
         total={total}
         page={page}
-        pageSize={50}
+        pageSize={pageSize}
         onPageChange={setPage}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         loading={obsLoading}
       />
     </div>

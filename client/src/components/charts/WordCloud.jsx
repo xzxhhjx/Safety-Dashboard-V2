@@ -1,6 +1,5 @@
 import BaseChart from './BaseChart';
 import { CHART_COLORS } from '../../config';
-import 'echarts-wordcloud';
 
 export default function WordCloud({ data }) {
   if (!data?.length) return <div className="chart-container flex items-center justify-center text-gray-600">No data</div>;

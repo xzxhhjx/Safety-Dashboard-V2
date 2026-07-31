@@ -31,8 +31,8 @@ api.interceptors.response.use(
 export const fetchStats = (filters = {}) =>
   api.get('/observations/stats', { params: filters }).then(r => r.data);
 
-export const fetchObservations = (page = 1, filters = {}) =>
-  api.get('/observations', { params: { page, pageSize: 50, ...filters } }).then(r => r.data);
+export const fetchObservations = (page = 1, pageSize = 50, filters = {}) =>
+  api.get('/observations', { params: { page, pageSize, ...filters } }).then(r => r.data);
 
 export const fetchObservationById = (id) =>
   api.get(`/observations/${id}`).then(r => r.data);

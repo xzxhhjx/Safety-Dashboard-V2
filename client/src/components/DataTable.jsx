@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { classifyHazard, AI_CONFIDENCE_COLORS } from '../config';
 import ImageModal from './ImageModal';
 
-export default function DataTable({ data, total, page, pageSize, onPageChange, loading }) {
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+export default function DataTable({ data, total, page, pageSize, onPageChange, onPageSizeChange, loading }) {
   const [modal, setModal] = useState({ open: false, images: [], index: 0 });
   const totalPages = Math.ceil(total / pageSize);
 
@@ -75,7 +77,21 @@ export default function DataTable({ data, total, page, pageSize, onPageChange, l
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-800">
-            <span className="text-sm text-gray-500">Page {page} of {totalPages || 1}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">Page {page} of {totalPages || 1}</span>
+              <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                Show
+                <select
+                  value={pageSize}
+                  onChange={e => onPageSizeChange(Number(e.target.value))}
+                  className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
+                >
+                  {PAGE_SIZE_OPTIONS.map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <div className="flex gap-2">
               <button onClick={() => onPageChange(page - 1)} disabled={page <= 1}
                 className="px-3 py-1 text-sm rounded bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
