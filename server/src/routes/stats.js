@@ -37,11 +37,25 @@ export default async function statsRoutes(app) {
       params
     );
 
-    // Hazard distribution
-    const [hazardDist] = await pool.query(
-      `SELECT hazard AS name, COUNT(*) AS value FROM observations ${where} GROUP BY hazard ORDER BY value DESC`,
+    // Hazard distribution — grouped by AI category (falls back to 其他 for unclassified)
+    const [hazardDistRaw] = await pool.query(
+      `SELECT
+         COALESCE(NULLIF(ai_category_cn, ''), '其他') AS name,
+         COALESCE(NULLIF(ai_category, ''), 'Others') AS category,
+         COUNT(*) AS value
+       FROM observations ${where}
+       GROUP BY name, category
+       ORDER BY value DESC`,
       params
     );
+    // Push "其他 / Others" to the end
+    const hazardDist = [];
+    let othersEntry = null;
+    for (const row of hazardDistRaw) {
+      if (row.category === 'Others') { othersEntry = row; }
+      else { hazardDist.push(row); }
+    }
+    if (othersEntry) hazardDist.push(othersEntry);
 
     // Area distribution
     const [areaDist] = await pool.query(
