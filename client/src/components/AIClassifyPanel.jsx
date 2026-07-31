@@ -6,13 +6,14 @@ export default function AIClassifyPanel() {
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [progress, setProgress] = useState(null); // { current, total, done, errors }
+  const [currentItem, setCurrentItem] = useState(null); // record being classified
+  const [progress, setProgress] = useState(null);
   const [result, setResult] = useState(null);
   const logEndRef = useRef(null);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
+  }, [logs, currentItem]);
 
   const addLog = (text, type = 'info') => {
     setLogs(prev => [...prev, { text, type, time: new Date().toLocaleTimeString() }]);
@@ -22,9 +23,9 @@ export default function AIClassifyPanel() {
     setRunning(true);
     setPaused(false);
     setLogs([]);
+    setCurrentItem(null);
     setProgress(null);
     setResult(null);
-    addLog(`Starting AI classification — scope: ${scope}`, 'header');
 
     try {
       for await (const event of classifyBatchStream({ scope })) {
@@ -32,6 +33,27 @@ export default function AIClassifyPanel() {
           case 'start':
             setProgress({ current: 0, total: event.total, done: 0, errors: 0 });
             addLog(event.message, 'info');
+            break;
+
+          case 'classifying':
+            setCurrentItem({
+              index: event.index,
+              total: event.total,
+              docId: event.docId,
+              description: event.description,
+              hazard: event.hazard,
+              submitter: event.submitter,
+              area: event.area,
+              hasImages: event.hasImages,
+            });
+            break;
+
+          case 'result':
+            setCurrentItem(null);
+            addLog(
+              `${event.index}/${event.total}  ${event.docId}  →  ${event.category}  [${event.confidence}]  (${event.method})`,
+              'result'
+            );
             break;
 
           case 'log':
@@ -49,10 +71,12 @@ export default function AIClassifyPanel() {
 
           case 'paused':
             setPaused(true);
+            setCurrentItem(null);
             addLog(`⏸ Paused at ${event.done}/${event.total}`, 'pause');
             break;
 
           case 'cancelled':
+            setCurrentItem(null);
             setResult({ cancelled: true, done: event.done, total: event.total });
             addLog(event.message, 'warn');
             setRunning(false);
@@ -60,6 +84,7 @@ export default function AIClassifyPanel() {
             break;
 
           case 'done':
+            setCurrentItem(null);
             setProgress({
               current: event.total,
               total: event.total,
@@ -67,10 +92,7 @@ export default function AIClassifyPanel() {
               errors: event.errors,
             });
             setResult({ done: event.done, total: event.total, skipped: event.skipped, errors: event.errors });
-            addLog(
-              `Complete! ${event.done} classified, ${event.skipped} skipped, ${event.errors} errors`,
-              'done'
-            );
+            addLog(`Complete! ${event.done} classified, ${event.skipped} skipped, ${event.errors} errors`, 'done');
             setRunning(false);
             setPaused(false);
             break;
@@ -91,31 +113,18 @@ export default function AIClassifyPanel() {
   };
 
   const handlePause = async () => {
-    try {
-      await aiPause();
-      addLog('Pausing...', 'pause');
-    } catch (err) {
-      addLog(`Pause failed: ${err.message}`, 'error');
-    }
+    try { await aiPause(); } catch {}
   };
 
   const handleResume = async () => {
     try {
       await aiResume();
       setPaused(false);
-      addLog('Resuming...', 'info');
-    } catch (err) {
-      addLog(`Resume failed: ${err.message}`, 'error');
-    }
+    } catch {}
   };
 
   const handleCancel = async () => {
-    try {
-      await aiCancel();
-      addLog('Cancelling...', 'warn');
-    } catch (err) {
-      addLog(`Cancel failed: ${err.message}`, 'error');
-    }
+    try { await aiCancel(); } catch {}
   };
 
   const pct = progress ? Math.round((progress.current / progress.total) * 100) : 0;
@@ -124,7 +133,8 @@ export default function AIClassifyPanel() {
     <div className="card mb-6">
       <h2 className="text-lg font-semibold mb-4">AI Classification</h2>
 
-      <div className="flex gap-4 items-end">
+      {/* Controls */}
+      <div className="flex gap-4 items-end flex-wrap">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-gray-500">Scope</span>
           <select
@@ -139,12 +149,12 @@ export default function AIClassifyPanel() {
           </select>
         </label>
 
-        {!running && !result && (
+        {!running && (
           <button
             onClick={handleStart}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm font-medium transition"
           >
-            Start AI Analysis
+            {result ? 'Start New Run' : 'Start AI Analysis'}
           </button>
         )}
 
@@ -173,15 +183,6 @@ export default function AIClassifyPanel() {
             </button>
           </>
         )}
-
-        {result && !running && (
-          <button
-            onClick={handleStart}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm font-medium transition"
-          >
-            Start New Run
-          </button>
-        )}
       </div>
 
       {/* Progress bar */}
@@ -190,9 +191,9 @@ export default function AIClassifyPanel() {
           <div className="flex justify-between text-xs text-gray-400 mb-1">
             <span>
               {progress.done !== undefined
-                ? `${progress.done} classified`
+                ? `${progress.done} / ${progress.total} classified`
                 : `${progress.current} / ${progress.total}`}
-              {paused && ' · PAUSED'}
+              {paused && ' · ⏸ PAUSED'}
               {progress.errors > 0 && ` · ${progress.errors} errors`}
             </span>
             <span>{pct}%</span>
@@ -200,7 +201,13 @@ export default function AIClassifyPanel() {
           <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-300 rounded-full ${
-                paused ? 'bg-yellow-500' : result?.cancelled ? 'bg-red-500' : result ? 'bg-emerald-500' : 'bg-purple-500'
+                paused
+                  ? 'bg-yellow-500'
+                  : result?.cancelled
+                  ? 'bg-red-500'
+                  : result
+                  ? 'bg-emerald-500'
+                  : 'bg-purple-500'
               }`}
               style={{ width: `${pct}%` }}
             />
@@ -208,7 +215,31 @@ export default function AIClassifyPanel() {
         </div>
       )}
 
-      {/* Log area */}
+      {/* Current item being classified */}
+      {currentItem && (
+        <div className="mt-3 bg-purple-900/30 border border-purple-700/50 rounded p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-block w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+            <span className="text-xs text-purple-300 font-semibold">
+              Classifying {currentItem.index}/{currentItem.total}
+            </span>
+            <span className="text-xs text-gray-500">· {currentItem.docId}</span>
+            {currentItem.hasImages > 0 && (
+              <span className="text-xs text-gray-500">· 🖼 {currentItem.hasImages} image(s)</span>
+            )}
+          </div>
+          <p className="text-sm text-gray-300 leading-relaxed">
+            {currentItem.description || <span className="text-gray-600 italic">No description</span>}
+          </p>
+          <div className="flex gap-3 mt-1.5 text-xs text-gray-500">
+            {currentItem.hazard && <span>🏷 {currentItem.hazard}</span>}
+            {currentItem.submitter && <span>👤 {currentItem.submitter}</span>}
+            {currentItem.area && <span>📍 {currentItem.area}</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Result log */}
       {logs.length > 0 && (
         <div className="mt-3 bg-gray-900 border border-gray-700 rounded p-3 max-h-80 overflow-y-auto font-mono text-xs">
           {logs.map((entry, i) => (
@@ -217,6 +248,8 @@ export default function AIClassifyPanel() {
               className={`log-line ${
                 entry.type === 'header'
                   ? 'text-white font-semibold border-b border-gray-700 pb-1 mb-1'
+                  : entry.type === 'result'
+                  ? 'text-emerald-300'
                   : entry.type === 'done'
                   ? 'text-emerald-400'
                   : entry.type === 'pause'

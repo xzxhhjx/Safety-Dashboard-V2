@@ -155,6 +155,20 @@ export default async function aiRoutes(app) {
 
             const description = record.description || '';
             const hazardLabel = record.hazard || '';
+            const descPreview = description.length > 60 ? description.slice(0, 60) + '…' : description;
+
+            // Notify frontend: which record is being classified
+            send({
+              type: 'classifying',
+              index: i + 1,
+              total,
+              docId,
+              description: descPreview,
+              hazard: hazardLabel,
+              submitter: record.submitter || '',
+              area: record.area || '',
+              hasImages: urls.length,
+            });
 
             let result;
             if (urls.length > 0) {
@@ -177,9 +191,14 @@ export default async function aiRoutes(app) {
 
             done++;
             send({
-              type: 'log',
-              phase: 'ok',
-              message: `[${i + 1}/${total}] ${docId} → ${result.categoryCN || result.category} (${result.method})`,
+              type: 'result',
+              index: i + 1,
+              total,
+              docId,
+              category: result.categoryCN || result.category,
+              categoryEn: result.category,
+              confidence: result.confidence || '—',
+              method: result.method,
             });
           }
         } catch (err) {
