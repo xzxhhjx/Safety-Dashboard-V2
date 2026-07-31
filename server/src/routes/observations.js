@@ -90,7 +90,10 @@ export default async function observationRoutes(app) {
     try {
       for (const record of records) {
         if (!record.id) continue;
-        const values = fields.map(f => record[f] ?? null);
+        const values = fields.map(f => {
+          const val = record[f] ?? null;
+          return f === 'photos' ? JSON.stringify(val) : val;
+        });
         const placeholders = fields.map(() => '?').join(', ');
         const updates = fields.map(f => `${f} = VALUES(${f})`).join(', ');
 
