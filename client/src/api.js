@@ -60,6 +60,62 @@ export const classifySingle = (data) =>
 export const classifyBatch = (data) =>
   api.post('/ai/classify-batch', data).then(r => r.data);
 
+// Streaming AI batch classify — yields NDJSON events
+export async function* classifyBatchStream(data) {
+  const response = await fetch('/api/ai/classify-batch/run', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        yield JSON.parse(trimmed);
+      } catch {
+        // skip
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    try { yield JSON.parse(buffer.trim()); } catch {}
+  }
+}
+
+export const aiPause = () =>
+  api.post('/ai/classify-batch/pause').then(r => r.data);
+
+export const aiResume = () =>
+  api.post('/ai/classify-batch/resume').then(r => r.data);
+
+export const aiCancel = () =>
+  api.post('/ai/classify-batch/cancel').then(r => r.data);
+
+export const aiStatus = () =>
+  api.get('/ai/classify-batch/status').then(r => r.data);
+
 export const uploadExcel = (file) => {
   const formData = new FormData();
   formData.append('file', file);
