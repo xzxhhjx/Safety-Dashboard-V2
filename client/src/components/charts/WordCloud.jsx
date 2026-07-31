@@ -7,7 +7,6 @@ export default function WordCloud({ data }) {
 
   const option = {
     tooltip: { trigger: 'item' },
-    title: { text: 'Word Cloud', textStyle: { color: '#9CA3AF', fontSize: 14 } },
     series: [{
       type: 'wordCloud',
       shape: 'circle',
@@ -30,5 +29,5 @@ export default function WordCloud({ data }) {
     }],
   };
 
-  return <div className="chart-container"><BaseChart option={option} /></div>;
+  return <div className="chart-container-tall"><BaseChart option={option} height="100%" /></div>;
 }

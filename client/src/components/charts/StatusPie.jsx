@@ -8,7 +8,6 @@ export default function StatusPie({ data }) {
 
   const option = {
     tooltip: { trigger: 'item' },
-    title: { text: 'Status Breakdown', textStyle: { color: '#9CA3AF', fontSize: 14 } },
     series: [{
       type: 'pie', radius: ['40%', '70%'],
       data: data.map(d => ({ ...d, itemStyle: { color: STATUS_COLORS[d.name] || COLORS.NEUTRAL } })),

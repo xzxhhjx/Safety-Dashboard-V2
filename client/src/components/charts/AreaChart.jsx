@@ -6,8 +6,7 @@ export default function AreaChart({ data }) {
 
   const option = {
     tooltip: { trigger: 'axis' },
-    title: { text: 'Area Distribution', textStyle: { color: '#9CA3AF', fontSize: 14 } },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    grid: { left: '3%', right: '4%', top: '3%', bottom: '3%', containLabel: true },
     xAxis: { type: 'category', data: data.map(d => d.name), axisLabel: { color: '#9CA3AF', rotate: 45 } },
     yAxis: { type: 'value', axisLabel: { color: '#9CA3AF' } },
     series: [{
@@ -16,5 +15,5 @@ export default function AreaChart({ data }) {
     }],
   };
 
-  return <div className="chart-container"><BaseChart option={option} /></div>;
+  return <div className="chart-container-tall"><BaseChart option={option} height="100%" /></div>;
 }

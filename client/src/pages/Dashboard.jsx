@@ -26,17 +26,35 @@ export default function Dashboard() {
       <FilterBar filters={filters} onChange={f => { setFilters(f); setPage(1); }} />
       <MetricCards stats={stats} loading={statsLoading} />
 
-      {/* Chart section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <HazardChart data={stats?.hazardDist} />
-        <AreaChart data={stats?.areaDist} />
-        <StatusPie data={stats?.statusDist} />
-        <DeptChart data={stats?.deptRank} />
-        <SubmitterChart data={stats?.submitterRank} />
-        <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
-        <div className="md:col-span-2">
+      {/* Row 2: Hazard Distribution (2/3) + Status Breakdown (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <div className="lg:col-span-2">
+          <HazardChart data={stats?.hazardDist} />
+        </div>
+        <div className="lg:col-span-1">
+          <StatusPie data={stats?.statusDist} />
+        </div>
+      </div>
+
+      {/* Row 3: Word Cloud (1/3) + Area Distribution (2/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <div className="lg:col-span-1">
           <WordCloud data={stats?.hazardDist} />
         </div>
+        <div className="lg:col-span-2">
+          <AreaChart data={stats?.areaDist} />
+        </div>
+      </div>
+
+      {/* Row 4: Monthly Trend (full width) */}
+      <div className="mb-4">
+        <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
+      </div>
+
+      {/* Row 5: Department Ranking (1/2) + Top Submitters (1/2) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <DeptChart data={stats?.deptRank} />
+        <SubmitterChart data={stats?.submitterRank} />
       </div>
 
       {/* Table section */}

@@ -6,8 +6,7 @@ export default function HazardChart({ data }) {
 
   const option = {
     tooltip: { trigger: 'axis' },
-    title: { text: 'Hazard Distribution', textStyle: { color: '#9CA3AF', fontSize: 14 } },
-    grid: { left: '3%', right: '10%', bottom: '3%', containLabel: true },
+    grid: { left: '3%', right: '10%', top: '3%', bottom: '3%', containLabel: true },
     xAxis: { type: 'value', axisLabel: { color: '#9CA3AF' } },
     yAxis: { type: 'category', data: data.map(d => d.name).reverse(), axisLabel: { color: '#9CA3AF', width: 120, overflow: 'truncate' } },
     series: [{
@@ -17,5 +16,5 @@ export default function HazardChart({ data }) {
     }],
   };
 
-  return <div className="chart-container"><BaseChart option={option} /></div>;
+  return <div className="chart-container-tall"><BaseChart option={option} height="100%" /></div>;
 }
