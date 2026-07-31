@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config.js';
 
 const genAI = config.geminiApiKey ? new GoogleGenerativeAI(config.geminiApiKey) : null;
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 const VALID_CATEGORIES = new Set([
   'Confined Space', 'Excavation & Trenching', 'Lifting & Rigging',
@@ -64,8 +64,22 @@ export async function classifyWithGemini(imageUrls, description, hazardLabel) {
     const result = await model.generateContent(parts);
     return parseResponse(result.response.text());
   } catch (err) {
-    console.error(`[gemini] API error: ${err.message}`);
-    // Fall back to keyword on API error
+    const msg = err.message || String(err);
+    console.error(`[gemini] API error: ${msg}`);
+
+    // 429 = rate limit or quota exhausted — wait and retry once
+    if (msg.includes('429') || msg.includes('quota') || msg.includes('depleted')) {
+      console.warn('[gemini] Rate limited, waiting 10s before retry...');
+      await sleep(10000);
+      try {
+        const parts2 = hasImages ? [prompt, ...imageParts] : [prompt];
+        const result2 = await model.generateContent(parts2);
+        return parseResponse(result2.response.text());
+      } catch (retryErr) {
+        console.error(`[gemini] Retry also failed: ${retryErr.message}`);
+      }
+    }
+
     return null;
   }
 }
@@ -121,4 +135,8 @@ function parseResponse(text) {
     }
   }
   return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: 'Failed to parse response' };
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

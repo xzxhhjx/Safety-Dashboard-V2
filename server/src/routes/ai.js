@@ -141,7 +141,7 @@ export default async function aiRoutes(app) {
         // --- Check pause flag ---
         while (job.paused && !job.cancelled) {
           send({ type: 'paused', done, total });
-          await sleep(500);
+          await sleep(2000);
         }
         if (job.cancelled) {
           send({ type: 'cancelled', done, total, message: `Cancelled after ${done}/${total} records.` });
@@ -232,7 +232,7 @@ export default async function aiRoutes(app) {
 
         // Delay between requests
         if (i < ids.length - 1) {
-          await sleep(500);
+          await sleep(2000);
         }
       }
 
