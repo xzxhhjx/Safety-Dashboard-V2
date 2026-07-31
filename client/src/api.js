@@ -66,4 +66,53 @@ export const uploadExcel = (file) => {
   return api.post('/upload/excel', formData).then(r => r.data);
 };
 
+// Streaming upload — yields NDJSON events as they arrive
+export async function* uploadExcelStream(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch('/api/upload/excel', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep incomplete line in buffer
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        yield JSON.parse(trimmed);
+      } catch {
+        // skip malformed lines
+      }
+    }
+  }
+
+  // Flush remaining buffer
+  if (buffer.trim()) {
+    try {
+      yield JSON.parse(buffer.trim());
+    } catch {
+      // skip
+    }
+  }
+}
+
 export default api;
