@@ -2,6 +2,7 @@ import { PassThrough } from 'node:stream';
 import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { classifyWithGemini } from '../lib/gemini.js';
+import { classifyWithDeepSeek } from '../lib/deepseek.js';
 import { keywordClassify } from '../lib/classifier.js';
 import { config } from '../config.js';
 
@@ -40,14 +41,12 @@ export default async function aiRoutes(app) {
 
     if (!Array.isArray(urls)) urls = [];
 
+    const provider = request.body.provider || 'gemini';
+
     let result;
-    // Always try Gemini first (text-only or with images)
-    result = await classifyWithGemini(urls, description, hazardLabel);
+    result = await classifyByProvider(provider, urls, description, hazardLabel);
     if (!result) {
-      // Gemini failed — fall back to keyword
       result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
-    } else {
-      result.method = result.method || 'gemini';
     }
 
     await pool.query(
@@ -85,7 +84,8 @@ export default async function aiRoutes(app) {
 
   // Run batch classification with streaming progress + pause/cancel
   app.post('/api/ai/classify-batch/run', { preHandler: [authMiddleware] }, async (request, reply) => {
-    const { docIds, scope } = request.body || {};
+    const { docIds, scope, provider } = request.body || {};
+    const aiProvider = provider || 'gemini';
 
     // Resolve IDs
     let ids = docIds || [];
@@ -119,14 +119,15 @@ export default async function aiRoutes(app) {
       let skipped = 0;
       let errors = 0;
 
-      const geminiAvailable = !!config.geminiApiKey;
+      const aiAvailable = aiProvider === 'deepseek' ? !!config.deepseekApiKey : !!config.geminiApiKey;
       const scopeLabel = scope || (docIds ? 'custom IDs' : 'all');
       send({
         type: 'start',
         total,
         scope: scopeLabel,
-        geminiAvailable,
-        message: `Starting AI classification for ${total} records (scope: ${scopeLabel})${geminiAvailable ? '' : ' — Gemini NOT configured, will use keyword matching'}`,
+        provider: aiProvider,
+        providerAvailable: aiAvailable,
+        message: `Starting AI classification for ${total} records (scope: ${scopeLabel}, provider: ${aiProvider})${aiAvailable ? '' : ` — ${aiProvider} NOT configured, will use keyword matching`}`,
       });
 
       for (let i = 0; i < ids.length; i++) {
@@ -184,21 +185,12 @@ export default async function aiRoutes(app) {
             });
 
             let result;
-            let methodUsed = 'keyword';
-            // Always try Gemini first (text-only or with images)
-            if (config.geminiApiKey) {
-              result = await classifyWithGemini(urls, description, hazardLabel);
-              if (result) {
-                methodUsed = 'gemini';
-              } else {
-                console.error(`[ai] Gemini returned null for ${docId}, falling back to keyword`);
-                send({ type: 'log', phase: 'warn', message: `[${i + 1}/${total}] ${docId}: Gemini failed, using keyword fallback` });
-              }
-            }
+            result = await classifyByProvider(aiProvider, urls, description, hazardLabel);
             if (!result) {
+              console.error(`[ai] ${aiProvider} returned null for ${docId}, falling back to keyword`);
+              send({ type: 'log', phase: 'warn', message: `[${i + 1}/${total}] ${docId}: ${aiProvider} failed, using keyword fallback` });
               result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
             }
-            result.method = result.method || methodUsed;
 
             await pool.query(
               `UPDATE observations SET
@@ -281,6 +273,16 @@ export default async function aiRoutes(app) {
     }
     return { running: true, paused: job.paused, cancelled: job.cancelled };
   });
+}
+
+async function classifyByProvider(provider, urls, description, hazardLabel) {
+  switch (provider) {
+    case 'deepseek':
+      return classifyWithDeepSeek(description, hazardLabel);
+    case 'gemini':
+    default:
+      return classifyWithGemini(urls, description, hazardLabel);
+  }
 }
 
 function sleep(ms) {

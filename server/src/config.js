@@ -2,6 +2,7 @@ export const config = {
   port: parseInt(process.env.PORT) || 3001,
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
   uploadDir: process.env.UPLOAD_DIR || './uploads',
   mysql: {
     host: process.env.MYSQL_HOST || 'localhost',

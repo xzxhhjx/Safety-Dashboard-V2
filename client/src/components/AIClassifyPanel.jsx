@@ -2,11 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { classifyBatchStream, aiPause, aiResume, aiCancel } from '../api';
 
 export default function AIClassifyPanel() {
+  const [provider, setProvider] = useState('gemini');
   const [scope, setScope] = useState('unanalyzed');
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [currentItem, setCurrentItem] = useState(null); // record being classified
+  const [currentItem, setCurrentItem] = useState(null);
   const [progress, setProgress] = useState(null);
   const [result, setResult] = useState(null);
   const logEndRef = useRef(null);
@@ -28,15 +29,15 @@ export default function AIClassifyPanel() {
     setResult(null);
 
     try {
-      for await (const event of classifyBatchStream({ scope })) {
+      for await (const event of classifyBatchStream({ scope, provider })) {
         switch (event.type) {
           case 'start':
             setProgress({ current: 0, total: event.total, done: 0, errors: 0 });
-            addLog(event.message, event.geminiAvailable ? 'info' : 'warn');
-            if (!event.geminiAvailable) {
-              addLog('GEMINI_API_KEY 未配置，将使用关键词匹配（低精度）', 'warn');
+            addLog(event.message, event.providerAvailable ? 'info' : 'warn');
+            if (!event.providerAvailable) {
+              addLog(`${event.provider.toUpperCase()} API key 未配置，将使用关键词匹配（低精度）`, 'warn');
             }
-            addLog(`Scope: ${event.scope}, Total: ${event.total} records`, 'info');
+            addLog(`Provider: ${event.provider}, Scope: ${event.scope}, Total: ${event.total} records`, 'info');
             break;
 
           case 'classifying':
@@ -61,7 +62,7 @@ export default function AIClassifyPanel() {
             break;
 
           case 'log':
-            addLog(event.message, event.phase === 'error' ? 'error' : 'info');
+            addLog(event.message, event.phase === 'error' ? 'error' : event.phase === 'warn' ? 'warn' : 'info');
             break;
 
           case 'progress':
@@ -139,6 +140,19 @@ export default function AIClassifyPanel() {
 
       {/* Controls */}
       <div className="flex gap-4 items-end flex-wrap">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-gray-500">Provider</span>
+          <select
+            value={provider}
+            onChange={e => setProvider(e.target.value)}
+            disabled={running}
+            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm disabled:opacity-50"
+          >
+            <option value="gemini">Gemini (Google)</option>
+            <option value="deepseek">DeepSeek</option>
+          </select>
+        </label>
+
         <label className="flex flex-col gap-1">
           <span className="text-xs text-gray-500">Scope</span>
           <select
