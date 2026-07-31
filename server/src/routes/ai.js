@@ -71,6 +71,9 @@ export default async function aiRoutes(app) {
     } else if (scope === 'others') {
       const [rows] = await pool.query("SELECT id FROM observations WHERE ai_category = 'Others'");
       ids = rows.map(r => r.id);
+    } else if (scope === 'last50') {
+      const [rows] = await pool.query('SELECT id FROM observations ORDER BY created_at DESC LIMIT 50');
+      ids = rows.map(r => r.id);
     } else if (scope === 'all' || ids.length === 0) {
       const [rows] = await pool.query('SELECT id FROM observations');
       ids = rows.map(r => r.id);
@@ -90,6 +93,9 @@ export default async function aiRoutes(app) {
       ids = rows.map(r => r.id);
     } else if (scope === 'others') {
       const [rows] = await pool.query("SELECT id FROM observations WHERE ai_category = 'Others'");
+      ids = rows.map(r => r.id);
+    } else if (scope === 'last50') {
+      const [rows] = await pool.query('SELECT id FROM observations ORDER BY created_at DESC LIMIT 50');
       ids = rows.map(r => r.id);
     } else if (scope === 'all' || ids.length === 0) {
       const [rows] = await pool.query('SELECT id FROM observations');
@@ -169,15 +175,14 @@ export default async function aiRoutes(app) {
             });
 
             let result;
-            if (urls.length > 0) {
-              result = await classifyWithGemini(urls, description, hazardLabel);
-              if (result.confidence === 'low' && result.reasoning && result.reasoning.includes('No readable images')) {
-                result = { ...keywordClassify(description, hazardLabel), confidence: 'low', method: 'keyword' };
-              }
-            } else {
+            // Always try Gemini first (text-only or with images)
+            result = await classifyWithGemini(urls, description, hazardLabel);
+            if (!result) {
+              // Gemini failed — fall back to keyword
               result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
+            } else {
+              result.method = result.method || 'gemini';
             }
-            result.method = result.method || 'gemini';
 
             await pool.query(
               `UPDATE observations SET

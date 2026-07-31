@@ -38,7 +38,7 @@ async function urlToGeminiPart(url) {
 
 export async function classifyWithGemini(imageUrls, description, hazardLabel) {
   if (!genAI) {
-    return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: 'Gemini API key not configured' };
+    return null; // No API key — caller should fall back to keyword
   }
 
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });

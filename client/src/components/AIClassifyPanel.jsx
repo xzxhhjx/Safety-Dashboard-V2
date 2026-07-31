@@ -143,6 +143,7 @@ export default function AIClassifyPanel() {
             disabled={running}
             className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm disabled:opacity-50"
           >
+            <option value="last50">Last 50 Records (Test)</option>
             <option value="unanalyzed">Unanalyzed Records</option>
             <option value="others">"Others" Classification Only</option>
             <option value="all">All Records</option>
