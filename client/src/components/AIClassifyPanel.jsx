@@ -32,7 +32,11 @@ export default function AIClassifyPanel() {
         switch (event.type) {
           case 'start':
             setProgress({ current: 0, total: event.total, done: 0, errors: 0 });
-            addLog(event.message, 'info');
+            addLog(event.message, event.geminiAvailable ? 'info' : 'warn');
+            if (!event.geminiAvailable) {
+              addLog('GEMINI_API_KEY 未配置，将使用关键词匹配（低精度）', 'warn');
+            }
+            addLog(`Scope: ${event.scope}, Total: ${event.total} records`, 'info');
             break;
 
           case 'classifying':

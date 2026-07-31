@@ -3,6 +3,7 @@ import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { classifyWithGemini } from '../lib/gemini.js';
 import { keywordClassify } from '../lib/classifier.js';
+import { config } from '../config.js';
 
 // In-memory job state (single job at a time)
 let job = null; // { paused, cancelled }
@@ -118,7 +119,15 @@ export default async function aiRoutes(app) {
       let skipped = 0;
       let errors = 0;
 
-      send({ type: 'start', total, message: `Starting AI classification for ${total} records...` });
+      const geminiAvailable = !!config.geminiApiKey;
+      const scopeLabel = scope || (docIds ? 'custom IDs' : 'all');
+      send({
+        type: 'start',
+        total,
+        scope: scopeLabel,
+        geminiAvailable,
+        message: `Starting AI classification for ${total} records (scope: ${scopeLabel})${geminiAvailable ? '' : ' — Gemini NOT configured, will use keyword matching'}`,
+      });
 
       for (let i = 0; i < ids.length; i++) {
         // --- Check cancel flag ---
@@ -175,14 +184,21 @@ export default async function aiRoutes(app) {
             });
 
             let result;
+            let methodUsed = 'keyword';
             // Always try Gemini first (text-only or with images)
-            result = await classifyWithGemini(urls, description, hazardLabel);
-            if (!result) {
-              // Gemini failed — fall back to keyword
-              result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
-            } else {
-              result.method = result.method || 'gemini';
+            if (config.geminiApiKey) {
+              result = await classifyWithGemini(urls, description, hazardLabel);
+              if (result) {
+                methodUsed = 'gemini';
+              } else {
+                console.error(`[ai] Gemini returned null for ${docId}, falling back to keyword`);
+                send({ type: 'log', phase: 'warn', message: `[${i + 1}/${total}] ${docId}: Gemini failed, using keyword fallback` });
+              }
             }
+            if (!result) {
+              result = { ...keywordClassify(description, hazardLabel), method: 'keyword' };
+            }
+            result.method = result.method || methodUsed;
 
             await pool.query(
               `UPDATE observations SET
