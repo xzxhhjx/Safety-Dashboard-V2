@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { classifyBatchStream, aiPause, aiResume, aiCancel } from '../api';
+import { Pause, Play, Square, Image, Tag, User, MapPin } from 'lucide-react';
 
 export default function AIClassifyPanel() {
   const [provider, setProvider] = useState('gemini');
@@ -182,23 +183,23 @@ export default function AIClassifyPanel() {
             {!paused ? (
               <button
                 onClick={handlePause}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm font-medium transition"
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm font-medium transition flex items-center gap-1.5"
               >
-                ⏸ Pause
+                <Pause className="w-4 h-4" /> Pause
               </button>
             ) : (
               <button
                 onClick={handleResume}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-sm font-medium transition"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-sm font-medium transition flex items-center gap-1.5"
               >
-                ▶ Resume
+                <Play className="w-4 h-4" /> Resume
               </button>
             )}
             <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition"
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition flex items-center gap-1.5"
             >
-              ⏹ Cancel
+              <Square className="w-4 h-4" /> Cancel
             </button>
           </>
         )}
@@ -244,16 +245,16 @@ export default function AIClassifyPanel() {
             </span>
             <span className="text-xs text-gray-500">· {currentItem.docId}</span>
             {currentItem.hasImages > 0 && (
-              <span className="text-xs text-gray-500">· 🖼 {currentItem.hasImages} image(s)</span>
+              <span className="text-xs text-gray-500 flex items-center gap-1">· <Image className="w-3 h-3" /> {currentItem.hasImages}</span>
             )}
           </div>
           <p className="text-sm text-gray-300 leading-relaxed">
             {currentItem.description || <span className="text-gray-600 italic">No description</span>}
           </p>
           <div className="flex gap-3 mt-1.5 text-xs text-gray-500">
-            {currentItem.hazard && <span>🏷 {currentItem.hazard}</span>}
-            {currentItem.submitter && <span>👤 {currentItem.submitter}</span>}
-            {currentItem.area && <span>📍 {currentItem.area}</span>}
+            {currentItem.hazard && <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {currentItem.hazard}</span>}
+            {currentItem.submitter && <span className="flex items-center gap-1"><User className="w-3 h-3" /> {currentItem.submitter}</span>}
+            {currentItem.area && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {currentItem.area}</span>}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import echarts from '../../lib/echarts.js';
+import * as echarts from 'echarts';
 
 export default function BaseChart({ option, height = '400px' }) {
   const ref = useRef(null);
