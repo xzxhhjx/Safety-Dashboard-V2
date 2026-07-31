@@ -54,19 +54,38 @@ export default async function uploadRoutes(app) {
       }
     }
 
-    const records = rows.map((row, idx) => ({
-      id: (colMap.id && row[colMap.id]) ? String(row[colMap.id]) : `AUTO-${idx + 1}`,
-      hazard: colMap.hazard ? row[colMap.hazard] : null,
+    // Pre-extract fields for ID generation
+    const getRowVal = (row, field) => colMap[field] ? row[colMap[field]] : null;
+
+    const records = rows.map((row, idx) => {
+      const rawTime = getRowVal(row, 'obs_time');
+      const rawName = getRowVal(row, 'submitter');
+      const rawId = getRowVal(row, 'id');
+
+      // Generate stable ID when no explicit ID column
+      let id;
+      if (rawId && String(rawId).trim()) {
+        id = String(rawId).trim();
+      } else {
+        const timeStr = rawTime ? String(rawTime).replace(/[^0-9]/g, '').slice(0, 8) : '';
+        const namePart = rawName ? String(rawName).replace(/[^a-zA-Z0-9一-鿿]/g, '').slice(0, 10) : '';
+        id = `GEN-${timeStr}-${namePart}-${idx + 1}`;
+      }
+
+      return {
+        id,
+        hazard: colMap.hazard ? row[colMap.hazard] : null,
       status: colMap.status ? row[colMap.status] : null,
       dept: colMap.dept ? row[colMap.dept] : null,
       description: colMap.description ? row[colMap.description] : null,
-      obs_time: colMap.obs_time ? parseDate(row[colMap.obs_time]) : null,
-      submitter: colMap.submitter ? row[colMap.submitter] : null,
-      obs_type: colMap.obs_type ? row[colMap.obs_type] : null,
-      area: colMap.area ? row[colMap.area] : null,
-      who: colMap.who ? row[colMap.who] : null,
+      obs_time: rawTime ? parseDate(rawTime) : null,
+      submitter: rawName || null,
+      obs_type: getRowVal(row, 'obs_type') || null,
+      area: getRowVal(row, 'area') || null,
+      who: getRowVal(row, 'who') || null,
       photos: colMap.photos ? parsePhotos(row[colMap.photos]) : [],
-    })).filter(r => r.hazard || r.description);
+      };
+    }).filter(r => r.hazard || r.description);
 
     const fields = [
       'id', 'hazard', 'status', 'dept', 'description', 'obs_time',
@@ -111,8 +130,26 @@ function parseDate(val) {
     const d = new Date((val - 25569) * 86400 * 1000);
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
-  const d = new Date(String(val));
-  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 19).replace('T', ' ');
+
+  let str = String(val).trim();
+
+  // Format: "27 11月 2025 16:28:50 (UTC+08:00) China Standard Time (Shanghai)"
+  // Or: "27 11月 2025 16:28:50"
+  const chineseMonthMatch = str.match(
+    /^(\d{1,2})\s+(\d{1,2})月\s+(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/
+  );
+  if (chineseMonthMatch) {
+    const [, d, m, y, hh, mm, ss] = chineseMonthMatch;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${hh.padStart(2, '0')}:${mm}:${ss}`;
+  }
+
+  // Standard date strings
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().slice(0, 19).replace('T', ' ');
+  }
+
+  return null;
 }
 
 function parsePhotos(val) {
