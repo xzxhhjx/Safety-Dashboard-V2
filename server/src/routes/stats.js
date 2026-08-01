@@ -44,7 +44,7 @@ export default async function statsRoutes(app) {
          COALESCE(NULLIF(ai_category, ''), 'Others') AS category,
          COUNT(*) AS value
        FROM observations ${where}
-       GROUP BY name, category
+       GROUP BY COALESCE(NULLIF(ai_category_cn, ''), '其他'), COALESCE(NULLIF(ai_category, ''), 'Others')
        ORDER BY value DESC`,
       params
     );

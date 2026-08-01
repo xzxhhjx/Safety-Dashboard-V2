@@ -63,7 +63,9 @@ export const AI_CONFIDENCE_COLORS = { high: '#059669', medium: '#D97706', low: '
  * "其他 - 电线裸露"  → "电线裸露"
  */
 function processHazardName(rawName) {
+  if (!rawName || typeof rawName !== 'string') return '其他';
   let name = rawName.trim();
+  if (!name) return '其他';
   const match = name.match(/^(?:other|其他|其它)[\s\-:：\(\)\[\]]+\s*(.+)/i);
   if (match && match[1]) {
     let extracted = match[1].trim();

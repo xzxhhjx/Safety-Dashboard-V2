@@ -24,7 +24,9 @@ export const HAZARD_CLASSIFICATION = [
  * "其他"             → "其他"
  */
 export function processHazardName(rawName) {
+  if (!rawName || typeof rawName !== 'string') return '其他';
   let name = rawName.trim();
+  if (!name) return '其他';
   // "其他[xxx]" / "其他 - xxx" / "其他(xxx)" → extract the real content
   const match = name.match(/^(?:other|其他|其它)[\s\-:：\(\)\[\]]+\s*(.+)/i);
   if (match && match[1]) {
