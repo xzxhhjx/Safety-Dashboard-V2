@@ -1,38 +1,78 @@
 @import "tailwindcss";
 
 /* =========================================================================
-   Design Tokens — macOS Sonoma / Apple Human Interface Guidelines
+   Design Tokens — Apple Enterprise HSE Safety Platform
+   macOS Sonoma / Apple Human Interface Guidelines
    ========================================================================= */
 :root {
+  /* Surfaces */
   --bg-primary: #F5F5F7;
-  --bg-card: rgba(255, 255, 255, 0.78);
+  --bg-card: rgba(255, 255, 255, 0.82);
+  --bg-sidebar: rgba(10, 75, 196, 0.92);
+
+  /* Text */
   --text-primary: #1D1D1F;
   --text-secondary: #6E6E73;
   --text-tertiary: #AEAEB2;
+
+  /* System Colors */
   --system-blue: #007AFF;
   --system-green: #34C759;
   --system-orange: #FF9F0A;
   --system-red: #FF453A;
   --system-purple: #5856D6;
   --system-gray: #8E8E93;
+
+  /* Borders & Dividers */
   --border-card: rgba(255, 255, 255, 0.65);
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.06);
-  --radius-card: 16px;
-  --radius-sm: 8px;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --divider: #E5E5EA;
+
+  /* Shadows — Apple elevation system */
+  --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.12);
+
+  /* Border Radius */
   --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Typography Scale */
   --text-size-caption: 11px;
   --text-size-body: 13px;
   --text-size-title: 15px;
+  --text-size-subtitle: 17px;
   --text-size-heading: 20px;
-  --row-height: 56px;
+  --text-size-large: 24px;
+  --text-size-hero: 28px;
+
+  /* Layout */
+  --row-height: 64px;
   --input-height: 36px;
+  --sidebar-width: 248px;
 }
 
 /* ===== Base ===== */
 body {
   margin: 0;
-  background: var(--bg-primary);
+  background: linear-gradient(180deg, #EEF2FF 0%, #F5F5F7 180px, #F5F5F7 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: var(--text-size-body);
@@ -40,15 +80,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== Glass Card (macOS Sonoma frosted glass) ===== */
+/* ===== Frosted Glass Card ===== */
 .card, .glass-card {
   background: var(--bg-card);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 20px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevation-1);
+  padding: var(--space-5);
 }
 
 /* ===== Section Title ===== */
@@ -66,6 +106,11 @@ body {
   border-collapse: separate;
   border-spacing: 0;
 }
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 .data-table th {
   text-align: left;
   font-size: var(--text-size-caption);
@@ -74,8 +119,11 @@ body {
   text-transform: none;
   letter-spacing: 0;
   padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(245, 245, 247, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 .data-table td {
   padding: 0 16px;
@@ -86,13 +134,13 @@ body {
   vertical-align: middle;
 }
 .data-table tbody tr {
-  transition: background 0.15s ease;
+  transition: background 0.12s ease;
 }
 .data-table tbody tr:hover {
   background: rgba(0, 122, 255, 0.04);
 }
 
-/* ===== Status Badges (capsule style) ===== */
+/* ===== Status Badges (capsule) ===== */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -101,15 +149,16 @@ body {
   font-size: var(--text-size-caption);
   font-weight: 500;
   line-height: 1.4;
+  white-space: nowrap;
 }
-.badge-closed   { background: rgba(52, 199, 89, 0.12); color: #248A3D; }
+.badge-closed   { background: rgba(52, 199, 89, 0.12);  color: #248A3D; }
 .badge-open     { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
 .badge-pending  { background: rgba(142, 142, 147, 0.12); color: #5C5C5E; }
-.badge-overdue  { background: rgba(255, 69, 58, 0.12); color: #C44235; }
-/* Keep legacy badge classes for backward compatibility */
-.badge-high    { background: rgba(52, 199, 89, 0.12); color: #248A3D; }
+.badge-overdue  { background: rgba(255, 69, 58, 0.12);  color: #C44235; }
+/* Backward-compatible aliases */
+.badge-high    { background: rgba(52, 199, 89, 0.12);  color: #248A3D; }
 .badge-medium  { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
-.badge-low     { background: rgba(255, 69, 58, 0.12); color: #C44235; }
+.badge-low     { background: rgba(255, 69, 58, 0.12);  color: #C44235; }
 
 /* ===== Input / Select (Apple style) ===== */
 .input-apple {
@@ -169,13 +218,13 @@ body {
 .btn-secondary:hover { background: rgba(0, 0, 0, 0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ===== Pagination Button ===== */
+/* ===== Pagination ===== */
 .pagination-btn {
   height: 28px;
   min-width: 28px;
   padding: 0 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: rgba(255, 255, 255, 0.7);
   color: var(--text-primary);
   font-size: 12px;
@@ -194,17 +243,131 @@ body {
 .chart-container      { width: 100%; height: 320px; }
 .chart-container-wide { width: 100%; height: 400px; }
 .chart-container-tall { width: 100%; height: 440px; }
+.chart-container-sm   { width: 100%; height: 280px; }
 
-/* ===== Scrollbar (light) ===== */
+/* ===== Tabs (Apple SF-style segmented control) ===== */
+.tab-bar {
+  display: inline-flex;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.tab-item {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-size-body);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.tab-item:hover { color: var(--text-primary); }
+.tab-item.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin: 0 8px;
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--text-size-body);
+  font-weight: 400;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+.sidebar-nav-item.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFF;
+  font-weight: 600;
+}
+
+/* ===== Main Content Area (offset for sidebar) ===== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-6);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* ===== Avatar ===== */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFF;
+  flex-shrink: 0;
+}
+.avatar-sm { width: 28px; height: 28px; font-size: 11px; }
+
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
 
-/* ===== Misc ===== */
+/* ===== Utility ===== */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1023px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+}
+@media (max-width: 767px) {
+  .card { padding: var(--space-4); border-radius: var(--radius-lg); }
 }
