@@ -113,16 +113,54 @@ export default async function uploadRoutes(app) {
 
       send({ type: 'log', phase: 'parse', message: `${records.length} valid records to insert` });
 
-      // --- Phase 4: Insert records ---
+      // --- Phase 4: Fetch existing records for diff ---
+      const recordIds = records.map(r => r.id).filter(Boolean);
+      const existingMap = new Map(); // id → status
+
+      if (recordIds.length > 0) {
+        // Batch SELECT in chunks of 500 to avoid oversized queries
+        const CHUNK = 500;
+        for (let i = 0; i < recordIds.length; i += CHUNK) {
+          const chunk = recordIds.slice(i, i + CHUNK);
+          const placeholders = chunk.map(() => '?').join(', ');
+          const [rows] = await pool.query(
+            `SELECT id, status FROM observations WHERE id IN (${placeholders})`,
+            chunk
+          );
+          for (const row of rows) {
+            existingMap.set(row.id, row.status);
+          }
+        }
+      }
+      send({ type: 'log', phase: 'diff', message: `Found ${existingMap.size} existing records in DB` });
+
+      // --- Phase 5: Insert / Update / Skip ---
       const fields = [
         'id', 'hazard', 'status', 'dept', 'description', 'obs_time',
         'submitter', 'obs_type', 'area', 'who', 'photos',
       ];
 
-      let count = 0;
+      let inserted = 0;
+      let updated = 0;
+      let skipped = 0;
       let imagesDownloaded = 0;
       let errors = 0;
       const total = records.length;
+
+      // Normalize status for comparison — treat these as "open"
+      const OPEN_STATUSES = new Set(['open', 'in progress', 'pending', 'overdue', 'open', '进行中', '待处理', '逾期']);
+      const CLOSED_STATUSES = new Set(['closed', 'done', '已关闭', '已完成']);
+
+      function normalizeStatus(s) {
+        if (!s) return 'unknown';
+        const lower = String(s).toLowerCase().trim();
+        if (CLOSED_STATUSES.has(lower) || lower.includes('closed') || lower.includes('关闭') || lower.includes('完成') || lower.includes('done')) return 'closed';
+        if (OPEN_STATUSES.has(lower) || lower.includes('open') || lower.includes('进行') || lower.includes('待') || lower.includes('逾期') || lower.includes('overdue') || lower.includes('pending')) return 'open';
+        return lower;
+      }
+
+      function isOpen(s) { return normalizeStatus(s) === 'open'; }
+      function isClosed(s) { return normalizeStatus(s) === 'closed'; }
 
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
@@ -132,30 +170,42 @@ export default async function uploadRoutes(app) {
         }
 
         try {
-          // Download external images before inserting
-          if (Array.isArray(record.photos) && record.photos.length > 0) {
-            const hasExternal = record.photos.some(u => typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://')));
-            if (hasExternal) {
-              send({ type: 'log', phase: 'image', message: `[${i + 1}/${total}] Downloading ${record.photos.length} image(s) for #${record.id}...` });
-              const localPaths = await downloadAndCacheImages(record.id, record.photos);
-              record.photos = localPaths;
-              imagesDownloaded++;
+          const existingStatus = existingMap.get(record.id);
+
+          if (!existingStatus) {
+            // --- New record: INSERT ---
+            if (Array.isArray(record.photos) && record.photos.length > 0) {
+              const hasExternal = record.photos.some(u => typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://')));
+              if (hasExternal) {
+                send({ type: 'log', phase: 'image', message: `[${i + 1}/${total}] Downloading ${record.photos.length} image(s) for #${record.id}...` });
+                const localPaths = await downloadAndCacheImages(record.id, record.photos);
+                record.photos = localPaths;
+                imagesDownloaded++;
+              }
             }
+
+            const values = fields.map(f => {
+              const val = record[f] ?? null;
+              return f === 'photos' ? JSON.stringify(val) : val;
+            });
+            const placeholders = fields.map(() => '?').join(', ');
+
+            await pool.query(
+              `INSERT INTO observations (${fields.join(', ')}) VALUES (${placeholders})`,
+              values
+            );
+            inserted++;
+          } else if (isOpen(existingStatus) && isClosed(record.status)) {
+            // --- Status changed Open→Closed: UPDATE status only ---
+            await pool.query(
+              `UPDATE observations SET status = ? WHERE id = ?`,
+              [record.status, record.id]
+            );
+            updated++;
+          } else {
+            // --- No meaningful change: SKIP ---
+            skipped++;
           }
-
-          const values = fields.map(f => {
-            const val = record[f] ?? null;
-            return f === 'photos' ? JSON.stringify(val) : val;
-          });
-          const placeholders = fields.map(() => '?').join(', ');
-          const updates = fields.map(f => `${f} = VALUES(${f})`).join(', ');
-
-          await pool.query(
-            `INSERT INTO observations (${fields.join(', ')}) VALUES (${placeholders})
-             ON DUPLICATE KEY UPDATE ${updates}`,
-            values
-          );
-          count++;
         } catch (err) {
           errors++;
           send({ type: 'log', phase: 'error', message: `Row ${i + 1} (#${record.id}) failed: ${err.message}` });
@@ -163,11 +213,11 @@ export default async function uploadRoutes(app) {
 
         // Progress update every 50 records
         if ((i + 1) % 50 === 0 || i === records.length - 1) {
-          send({ type: 'progress', current: i + 1, total, inserted: count, images: imagesDownloaded, errors });
+          send({ type: 'progress', current: i + 1, total, inserted, updated, skipped, images: imagesDownloaded, errors });
         }
       }
 
-      send({ type: 'done', count, total, imagesDownloaded, errors });
+      send({ type: 'done', inserted, updated, skipped, total, imagesDownloaded, errors });
       stream.end();
     } catch (err) {
       send({ type: 'error', message: err.message });

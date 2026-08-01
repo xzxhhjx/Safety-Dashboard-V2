@@ -35,6 +35,8 @@ export default function ExcelUpload() {
               current: event.current,
               total: event.total,
               inserted: event.inserted,
+              updated: event.updated,
+              skipped: event.skipped,
               images: event.images,
               errors: event.errors,
             });
@@ -43,18 +45,22 @@ export default function ExcelUpload() {
             setProgress({
               current: event.total,
               total: event.total,
-              inserted: event.count,
+              inserted: event.inserted,
+              updated: event.updated,
+              skipped: event.skipped,
               images: event.imagesDownloaded,
               errors: event.errors,
             });
             setResult({
-              count: event.count,
+              inserted: event.inserted,
+              updated: event.updated,
+              skipped: event.skipped,
               total: event.total,
               imagesDownloaded: event.imagesDownloaded,
               errors: event.errors,
             });
             addLog(
-              `Complete! ${event.count} records saved, ${event.imagesDownloaded} images downloaded${event.errors ? `, ${event.errors} errors` : ''}`,
+              `Complete! ${event.inserted} new, ${event.updated} status updated, ${event.skipped} skipped, ${event.imagesDownloaded} images${event.errors ? `, ${event.errors} errors` : ''}`,
               'done'
             );
             break;
@@ -111,7 +117,7 @@ export default function ExcelUpload() {
           <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
             <span>
               {progress.inserted !== undefined
-                ? `${progress.inserted} inserted`
+                ? `${progress.inserted} new${progress.updated > 0 ? ` · ${progress.updated} updated` : ''}${progress.skipped > 0 ? ` · ${progress.skipped} skipped` : ''}`
                 : `${progress.current} / ${progress.total}`}
               {progress.images > 0 && ` · ${progress.images} images`}
               {progress.errors > 0 && ` · ${progress.errors} errors`}
