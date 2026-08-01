@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import '../../styles/echarts-theme.js'; // registers 'apple-enterprise'
 
 export default function BaseChart({ option, height = '400px' }) {
   const ref = useRef(null);
@@ -7,7 +8,7 @@ export default function BaseChart({ option, height = '400px' }) {
 
   useEffect(() => {
     if (!ref.current) return;
-    const chart = echarts.init(ref.current, null, { renderer: 'canvas' });
+    const chart = echarts.init(ref.current, 'apple-enterprise', { renderer: 'canvas' });
     chartRef.current = chart;
 
     // ResizeObserver — re-layout chart when container size changes (grid/flexbox/tab-switch)
