@@ -26,15 +26,15 @@ export default function Analytics() {
     <div>
       <Toolbar title="Analytics" subtitle="Deep-dive into safety data" />
 
-      <div className="px-6 py-5" style={{ maxWidth: 1440 }}>
+      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
         {/* Tab Bar */}
-        <div className="mb-5">
+        <div className="mb-6">
           <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
         </div>
 
         {/* Risk Tab */}
         {activeTab === 'risk' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <h2 className="section-title">Risk Category Distribution</h2>
               <HazardChart data={stats?.hazardDist} />
@@ -48,12 +48,12 @@ export default function Analytics() {
 
         {/* Trends Tab */}
         {activeTab === 'trends' && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="card">
               <h2 className="section-title">Monthly Observation Trend</h2>
               <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="card">
                 <h2 className="section-title">Week-over-Week Comparison</h2>
                 <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
@@ -72,7 +72,7 @@ export default function Analytics() {
 
         {/* Areas Tab */}
         {activeTab === 'areas' && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="card">
               <h2 className="section-title">Top 10 Work Areas</h2>
               <AreaChart data={stats?.areaDist} />
@@ -86,7 +86,7 @@ export default function Analytics() {
 
         {/* Departments Tab */}
         {activeTab === 'departments' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <h2 className="section-title">Observations by Department</h2>
               <DeptChart data={stats?.deptRank} />
@@ -100,7 +100,7 @@ export default function Analytics() {
 
         {/* Submitters Tab */}
         {activeTab === 'submitters' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <h2 className="section-title">Top Submitters</h2>
               <SubmitterChart data={stats?.submitterRank} />

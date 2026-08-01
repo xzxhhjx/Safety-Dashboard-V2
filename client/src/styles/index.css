@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 /* =========================================================================
-   Design Tokens — Apple Enterprise HSE Safety Platform
-   macOS Sonoma / Apple Human Interface Guidelines
+   Design Tokens — macOS Native Desktop Application
+   Apple Health / Reminders / Linear / Arc aesthetic
    ========================================================================= */
 :root {
-  /* Surfaces */
-  --bg-primary: #F5F5F7;
-  --bg-card: rgba(255, 255, 255, 0.82);
-  --bg-sidebar: rgba(10, 75, 196, 0.92);
+  /* Surfaces — calm, unified, no brand-color blocks */
+  --bg-primary: #FAFAFA;
+  --bg-sidebar: #F7F7F8;
+  --bg-card: #FFFFFF;
 
   /* Text */
   --text-primary: #1D1D1F;
   --text-secondary: #6E6E73;
   --text-tertiary: #AEAEB2;
 
-  /* System Colors */
+  /* System Colors — accent only, never blocks */
   --system-blue: #007AFF;
   --system-green: #34C759;
   --system-orange: #FF9F0A;
@@ -23,23 +23,23 @@
   --system-purple: #5856D6;
   --system-gray: #8E8E93;
 
-  /* Borders & Dividers */
-  --border-card: rgba(255, 255, 255, 0.65);
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  /* Borders & Dividers — soft, recessive */
+  --border-card: rgba(0, 0, 0, 0.05);
+  --border-subtle: rgba(0, 0, 0, 0.04);
   --divider: #E5E5EA;
 
-  /* Shadows — Apple elevation system */
-  --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
-  --shadow-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
-  --shadow-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.12);
+  /* Shadows — barely there; cards sit on the canvas, not above it */
+  --shadow-elevation-1: 0 0.5px 1px rgba(0, 0, 0, 0.03);
+  --shadow-elevation-2: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-elevation-3: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-  /* Border Radius */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 18px;
-  --radius-2xl: 24px;
+  /* Border Radius — rounded-rect, not pill */
+  --radius-xs: 5px;
+  --radius-sm: 7px;
+  --radius-md: 9px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
 
   /* Spacing Scale */
   --space-1: 4px;
@@ -63,16 +63,15 @@
   --text-size-hero: 28px;
 
   /* Layout */
-  --row-height: 64px;
-  --input-height: 36px;
-  --sidebar-width: 248px;
+  --row-height: 52px;
+  --input-height: 32px;
+  --sidebar-width: 240px;
 }
 
 /* ===== Base ===== */
 body {
   margin: 0;
-  background: linear-gradient(180deg, #EEF2FF 0%, #F5F5F7 180px, #F5F5F7 100%);
-  background-attachment: fixed;
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: var(--text-size-body);
@@ -80,27 +79,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== Frosted Glass Card ===== */
-.card, .glass-card {
+/* ===== Card — subtle container, sits on shared canvas ===== */
+.card,
+.glass-card {
   background: var(--bg-card);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-elevation-1);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
   padding: var(--space-5);
 }
 
-/* ===== Section Title ===== */
+/* ===== Section Title — recessive, Apple-style small-caps label ===== */
 .section-title {
-  font-size: var(--text-size-title);
+  font-size: var(--text-size-caption);
   font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  margin-bottom: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
 }
 
-/* ===== Data Table (Apple Mail / Notes style) ===== */
+/* ===== Data Table (Apple Mail / Reminders list style) ===== */
 .data-table {
   width: 100%;
   border-collapse: separate;
@@ -118,11 +117,9 @@ body {
   color: var(--text-secondary);
   text-transform: none;
   letter-spacing: 0;
-  padding: 10px 16px;
-  background: rgba(245, 245, 247, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 7px 16px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--divider);
   white-space: nowrap;
 }
 .data-table td {
@@ -134,10 +131,10 @@ body {
   vertical-align: middle;
 }
 .data-table tbody tr {
-  transition: background 0.12s ease;
+  transition: background 0.1s ease;
 }
 .data-table tbody tr:hover {
-  background: rgba(0, 122, 255, 0.04);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 /* ===== Status Badges (capsule) ===== */
@@ -151,38 +148,40 @@ body {
   line-height: 1.4;
   white-space: nowrap;
 }
-.badge-closed   { background: rgba(52, 199, 89, 0.12);  color: #248A3D; }
-.badge-open     { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
-.badge-pending  { background: rgba(142, 142, 147, 0.12); color: #5C5C5E; }
-.badge-overdue  { background: rgba(255, 69, 58, 0.12);  color: #C44235; }
+.badge-closed    { background: rgba(52, 199, 89, 0.10);  color: #1F7A2D; }
+.badge-open      { background: rgba(255, 159, 10, 0.10); color: #9E5200; }
+.badge-pending   { background: rgba(142, 142, 147, 0.10); color: #5C5C5E; }
+.badge-overdue   { background: rgba(255, 69, 58, 0.10);  color: #C44235; }
 /* Backward-compatible aliases */
-.badge-high    { background: rgba(52, 199, 89, 0.12);  color: #248A3D; }
-.badge-medium  { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
-.badge-low     { background: rgba(255, 69, 58, 0.12);  color: #C44235; }
+.badge-high      { background: rgba(52, 199, 89, 0.10);  color: #1F7A2D; }
+.badge-medium    { background: rgba(255, 159, 10, 0.10); color: #9E5200; }
+.badge-low       { background: rgba(255, 69, 58, 0.10);  color: #C44235; }
 
-/* ===== Input / Select (Apple style) ===== */
+/* ===== Input / Select (native macOS field) ===== */
 .input-apple {
   height: var(--input-height);
-  padding: 0 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   font-size: var(--text-size-body);
   font-family: inherit;
   color: var(--text-primary);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 .input-apple:focus {
   border-color: var(--system-blue);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
 }
-.input-apple::placeholder { color: var(--text-tertiary); }
+.input-apple::placeholder {
+  color: var(--text-tertiary);
+}
 
 /* ===== Buttons ===== */
 .btn-primary {
   height: var(--input-height);
-  padding: 0 16px;
+  padding: 0 14px;
   border: none;
   border-radius: var(--radius-xs);
   background: var(--system-blue);
@@ -193,18 +192,23 @@ body {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: background 0.15s ease;
+  gap: 5px;
+  transition: background 0.12s ease;
 }
-.btn-primary:hover { background: #0066D6; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary:hover {
+  background: #0066D6;
+}
+.btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .btn-secondary {
   height: var(--input-height);
   padding: 0 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.10);
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   color: var(--text-primary);
   font-size: var(--text-size-body);
   font-weight: 400;
@@ -213,19 +217,24 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.1s ease;
 }
-.btn-secondary:hover { background: rgba(0, 0, 0, 0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+.btn-secondary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 /* ===== Pagination ===== */
 .pagination-btn {
   height: 28px;
   min-width: 28px;
   padding: 0 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   color: var(--text-primary);
   font-size: 12px;
   font-family: inherit;
@@ -234,46 +243,53 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: background 0.15s ease;
+  transition: background 0.1s ease;
 }
-.pagination-btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
-.pagination-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.03);
+}
+.pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 /* ===== Chart Container Heights ===== */
-.chart-container      { width: 100%; height: 320px; }
-.chart-container-wide { width: 100%; height: 400px; }
-.chart-container-tall { width: 100%; height: 440px; }
-.chart-container-sm   { width: 100%; height: 280px; }
+.chart-container       { width: 100%; height: 320px; }
+.chart-container-wide  { width: 100%; height: 400px; }
+.chart-container-tall  { width: 100%; height: 440px; }
+.chart-container-sm    { width: 100%; height: 280px; }
 
 /* ===== Tabs (Apple SF-style segmented control) ===== */
 .tab-bar {
   display: inline-flex;
   gap: 0;
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.03);
   border-radius: var(--radius-sm);
   padding: 2px;
 }
 .tab-item {
-  padding: 6px 16px;
+  padding: 5px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--text-secondary);
   font-size: var(--text-size-body);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   white-space: nowrap;
 }
-.tab-item:hover { color: var(--text-primary); }
-.tab-item.active {
-  background: rgba(255, 255, 255, 0.9);
+.tab-item:hover {
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.tab-item.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* ===== Sidebar ===== */
+/* ===== Sidebar — light, native macOS ===== */
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
@@ -281,35 +297,38 @@ body {
   left: 0;
   top: 0;
   background: var(--bg-sidebar);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   z-index: 100;
   overflow-y: auto;
+  /* platform window-drag region hint */
+  -webkit-app-region: drag;
 }
+
 .sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 7px 10px;
   margin: 0 8px;
-  border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: var(--text-size-body);
   font-weight: 400;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 .sidebar-nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
 }
 .sidebar-nav-item.active {
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFF;
-  font-weight: 600;
+  background: rgba(0, 122, 255, 0.07);
+  color: var(--system-blue);
+  font-weight: 500;
 }
 
 /* ===== Main Content Area (offset for sidebar) ===== */
@@ -318,16 +337,16 @@ body {
   min-height: 100vh;
 }
 
-/* ===== Toolbar ===== */
+/* ===== Toolbar — integrated, not floating ===== */
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px var(--space-6);
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px var(--space-8);
+  background: rgba(250, 250, 250, 0.80);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -346,13 +365,17 @@ body {
   color: #FFF;
   flex-shrink: 0;
 }
-.avatar-sm { width: 28px; height: 28px; font-size: 11px; }
+.avatar-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
 
 /* ===== Scrollbar ===== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+::-webkit-scrollbar            { width: 6px; height: 6px; }
+::-webkit-scrollbar-track      { background: transparent; }
+::-webkit-scrollbar-thumb      { background: rgba(0, 0, 0, 0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.22); }
 
 /* ===== Utility ===== */
 .line-clamp-2 {
@@ -364,10 +387,20 @@ body {
 
 /* ===== Responsive ===== */
 @media (max-width: 1023px) {
-  .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
-  .sidebar.open { transform: translateX(0); }
-  .main-content { margin-left: 0; }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+  }
 }
 @media (max-width: 767px) {
-  .card { padding: var(--space-4); border-radius: var(--radius-lg); }
+  .card {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+  }
 }

@@ -11,7 +11,7 @@ const GRID_COLUMNS = {
 
 function gridClass(columns) {
   const lg = GRID_COLUMNS[columns] || GRID_COLUMNS[4];
-  return `grid grid-cols-2 ${lg} gap-5 mb-5`;
+  return `grid grid-cols-2 ${lg} gap-6 mb-6`;
 }
 
 export default function KPICards({ cards, loading, columns = 4 }) {

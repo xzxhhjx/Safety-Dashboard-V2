@@ -42,9 +42,9 @@ export default function Observations() {
         }
       />
 
-      <div className="px-6 py-5" style={{ maxWidth: 1440 }}>
+      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
         {/* Advanced Filter Bar */}
-        <div className="card mb-5" style={{ padding: '16px 20px' }}>
+        <div className="card mb-6" style={{ padding: '16px 20px' }}>
           <FilterBar filters={filters} onChange={f => { setFilters(f); setPage(1); }} />
         </div>
 

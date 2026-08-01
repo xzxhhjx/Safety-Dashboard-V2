@@ -31,12 +31,12 @@ export default function Overview() {
     <div>
       <Toolbar title="Overview" subtitle="30-second safety status snapshot" />
 
-      <div className="px-6 py-5" style={{ maxWidth: 1440 }}>
+      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
         {/* KPI Cards */}
         <KPICards cards={kpiCards} loading={statsLoading} />
 
         {/* Row: Safety Trend + Status Ring */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="card lg:col-span-2">
             <h2 className="section-title">Safety Trend</h2>
             <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
@@ -48,7 +48,7 @@ export default function Overview() {
         </div>
 
         {/* Top Risk Categories */}
-        <div className="card mb-5">
+        <div className="card mb-6">
           <h2 className="section-title">Top Risk Categories</h2>
           <TopRiskBars data={stats?.hazardDist} />
         </div>

@@ -19,14 +19,14 @@ export default function WorkAreas() {
     <div>
       <Toolbar title="Work Areas" subtitle="Area-centric safety analysis" />
 
-      <div className="px-6 py-5" style={{ maxWidth: 1440 }}>
+      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
         {/* Search */}
-        <div className="mb-5">
+        <div className="mb-6">
           <SearchInput value={areaSearch} onChange={setAreaSearch} placeholder="Search work areas..." />
         </div>
 
         {/* Area Risk Heat + Area Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="card">
             <h2 className="section-title">Area Risk Distribution</h2>
             <AreaChart data={stats?.areaDist} />

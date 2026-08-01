@@ -28,9 +28,9 @@ export default function PeopleTeams() {
     <div>
       <Toolbar title="People & Teams" subtitle="Department performance and contributor insights" />
 
-      <div className="px-6 py-5" style={{ maxWidth: 1440 }}>
+      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
         {/* Department Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="card">
             <h2 className="section-title">Department Performance</h2>
             <DeptChart data={stats?.deptRank} />
@@ -53,7 +53,7 @@ export default function PeopleTeams() {
         </div>
 
         {/* Top Contributors */}
-        <div className="card mb-5">
+        <div className="card mb-6">
           <h2 className="section-title">Top Contributors</h2>
           {stats?.submitterRank?.length > 0 ? (
             <div className="flex flex-col gap-1">
