@@ -3,7 +3,7 @@ import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { classifyWithGemini } from '../lib/gemini.js';
 import { classifyWithDeepSeek } from '../lib/deepseek.js';
-import { keywordClassify } from '../lib/classifier.js';
+import { keywordClassify, normalizeArea } from '../lib/classifier.js';
 import { config } from '../config.js';
 
 // In-memory job state (single job at a time)
@@ -52,9 +52,10 @@ export default async function aiRoutes(app) {
     await pool.query(
       `UPDATE observations SET
         ai_category = ?, ai_category_cn = ?, ai_confidence = ?,
-        ai_method = ?, ai_reasoning = ?, ai_analyzed_at = NOW()
+        ai_method = ?, ai_reasoning = ?, ai_analyzed_at = NOW(),
+        area = COALESCE(NULLIF(?, ''), area)
        WHERE id = ?`,
-      [result.category, result.categoryCN, result.confidence, result.method, result.reasoning || '', docId]
+      [result.category, result.categoryCN, result.confidence, result.method, result.reasoning || '', result.area || '', docId]
     );
 
     return { success: true, docId, classification: result };
@@ -195,9 +196,10 @@ export default async function aiRoutes(app) {
             await pool.query(
               `UPDATE observations SET
                 ai_category = ?, ai_category_cn = ?, ai_confidence = ?,
-                ai_method = ?, ai_reasoning = ?, ai_analyzed_at = NOW()
+                ai_method = ?, ai_reasoning = ?, ai_analyzed_at = NOW(),
+                area = COALESCE(NULLIF(?, ''), area)
                WHERE id = ?`,
-              [result.category, result.categoryCN, result.confidence, result.method, result.reasoning || '', docId]
+              [result.category, result.categoryCN, result.confidence, result.method, result.reasoning || '', result.area || '', docId]
             );
 
             done++;
@@ -210,6 +212,7 @@ export default async function aiRoutes(app) {
               categoryEn: result.category,
               confidence: result.confidence || '—',
               method: result.method,
+              area: result.area || '',
             });
           }
         } catch (err) {

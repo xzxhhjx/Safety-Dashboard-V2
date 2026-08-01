@@ -2,6 +2,7 @@ import { PassThrough } from 'node:stream';
 import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { downloadAndCacheImages } from '../lib/storage.js';
+import { normalizeArea } from '../lib/classifier.js';
 import xlsx from 'xlsx';
 
 export default async function uploadRoutes(app) {
@@ -105,7 +106,7 @@ export default async function uploadRoutes(app) {
           obs_time: rawTime ? parseDate(rawTime) : null,
           submitter: rawName || null,
           obs_type: getRowVal(row, 'obs_type') || null,
-          area: getRowVal(row, 'area') || null,
+          area: normalizeArea(getRowVal(row, 'area')) || null,
           who: getRowVal(row, 'who') || null,
           photos: colMap.photos ? parsePhotos(row[colMap.photos]) : [],
         };

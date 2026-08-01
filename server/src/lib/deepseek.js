@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { normalizeArea } from './classifier.js';
 
 const DEEPSEEK_BASE = 'https://api.deepseek.com';
 const MODEL_NAME = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
@@ -24,9 +25,10 @@ const CATEGORY_CN_MAP = {
   'Emergency Preparedness': '应急准备', 'Environmental': '环境', 'Others': '其他',
 };
 
-const SYSTEM_PROMPT = `You are a construction site safety inspector AI. Classify the observation into EXACTLY ONE category.
+const SYSTEM_PROMPT = `You are a construction site safety inspector AI.
 
-Available categories:
+## Task 1: Classify hazard category into EXACTLY ONE:
+
 1. Confined Space (有限空间)
 2. Excavation & Trenching (开挖与沟槽)
 3. Lifting & Rigging (起重与吊装)
@@ -44,8 +46,14 @@ Available categories:
 15. Environmental (环境)
 16. Others (其他)
 
+## Task 2: Identify the work area from the description.
+
+Valid areas: HRSG, GTST, CCW/ACW, GSUT, ECB, FGA, FOPS, TP-03, ECP, CWP, Live Plant, Laydown
+
+If the area cannot be determined or doesn't match any valid area, use "Others".
+
 Return ONLY valid JSON, no other text:
-{"category":"Category Name","categoryCN":"中文名","confidence":"high|medium|low","reasoning":"Brief Chinese explanation of why"}`;
+{"category":"Category Name","categoryCN":"中文名","confidence":"high|medium|low","area":"valid area or Others","reasoning":"Brief Chinese explanation of why"}`;
 
 export async function classifyWithDeepSeek(description, hazardLabel) {
   if (!config.deepseekApiKey) {
@@ -126,10 +134,12 @@ function parseResponse(data) {
     const parsed = JSON.parse(cleaned);
     const category = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Others';
     const confidence = ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'low';
+    const area = normalizeArea(parsed.area) || null;
     return {
       category,
       categoryCN: CATEGORY_CN_MAP[category],
       confidence,
+      area,
       reasoning: parsed.reasoning || '',
       method: 'deepseek',
     };
@@ -141,17 +151,19 @@ function parseResponse(data) {
       try {
         const parsed = JSON.parse(match[0]);
         const category = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Others';
+        const area = normalizeArea(parsed.area) || null;
         return {
           category,
           categoryCN: CATEGORY_CN_MAP[category],
           confidence: 'low',
+          area,
           reasoning: parsed.reasoning || '',
           method: 'deepseek',
         };
       } catch {}
     }
   }
-  return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: 'Failed to parse DeepSeek response', method: 'deepseek' };
+  return { category: 'Others', categoryCN: '其他', confidence: 'low', area: null, reasoning: 'Failed to parse DeepSeek response', method: 'deepseek' };
 }
 
 function sleep(ms) {

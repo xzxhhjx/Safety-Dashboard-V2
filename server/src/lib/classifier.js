@@ -1,3 +1,66 @@
+// Whitelist of valid work areas on site
+export const VALID_AREAS = [
+  'HRSG', 'GTST', 'CCW/ACW', 'GSUT', 'ECB', 'FGA',
+  'FOPS', 'TP-03', 'ECP', 'CWP', 'Live Plant', 'Laydown',
+];
+
+/**
+ * Normalize a raw area string to a canonical valid area, or "Others".
+ *
+ * Handles patterns like:
+ *   "HRSG"        → "HRSG"
+ *   "hrsg area"   → "HRSG"
+ *   "Others[GSUT]"  → "GSUT"
+ *   "其他[GSUT]"    → "GSUT"
+ *   "Building CWP"  → "CWP"
+ *   "Unknown XYZ"   → "Others"
+ */
+export function normalizeArea(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const text = raw.trim();
+  if (!text) return null;
+
+  const lower = text.toLowerCase();
+
+  // 1. "Others[xxx]" or "其他[xxx]" → extract bracket content
+  const bracketMatch = text.match(/^(?:other|其他|其它)\s*[\[\(（](.+?)[\]\)）]\s*$/i);
+  if (bracketMatch) {
+    const inner = bracketMatch[1].trim();
+    for (const area of VALID_AREAS) {
+      if (inner.toLowerCase() === area.toLowerCase()) return area;
+    }
+    return 'Others';
+  }
+
+  // 2. Exact match (case-insensitive)
+  for (const area of VALID_AREAS) {
+    if (lower === area.toLowerCase()) return area;
+  }
+
+  // 3. Starts with a valid area name (e.g. "HRSG Area", "CWP Building")
+  for (const area of VALID_AREAS) {
+    if (lower.startsWith(area.toLowerCase() + ' ') || lower.startsWith(area.toLowerCase() + '-') || lower.startsWith(area.toLowerCase() + '/')) {
+      return area;
+    }
+  }
+
+  // 4. Contains a valid area as a distinct word
+  for (const area of VALID_AREAS) {
+    // Only apply for multi-char areas to avoid false matches
+    if (area.length >= 3) {
+      const idx = lower.indexOf(area.toLowerCase());
+      if (idx !== -1) {
+        // Check word boundary on both sides
+        const beforeOk = idx === 0 || /[\s\-/,]/.test(text[idx - 1]);
+        const afterOk = idx + area.length === text.length || /[\s\-/,]/.test(text[idx + area.length]);
+        if (beforeOk && afterOk) return area;
+      }
+    }
+  }
+
+  return 'Others';
+}
+
 export const HAZARD_CLASSIFICATION = [
   { category: 'Confined Space', cn: '有限空间', keywords: ['confined space', '有限空间'] },
   { category: 'Excavation & Trenching', cn: '开挖与沟槽', keywords: ['excavation', '开挖', '基坑', '沟', '井'] },
@@ -48,9 +111,9 @@ export function keywordClassify(description, hazardLabel) {
   for (const item of HAZARD_CLASSIFICATION) {
     for (const kw of item.keywords) {
       if (text.includes(kw.toLowerCase())) {
-        return { category: item.category, categoryCN: item.cn, confidence: 'medium', method: 'keyword' };
+        return { category: item.category, categoryCN: item.cn, confidence: 'medium', method: 'keyword', area: null };
       }
     }
   }
-  return { category: 'Others', categoryCN: '其他', confidence: 'low', method: 'keyword' };
+  return { category: 'Others', categoryCN: '其他', confidence: 'low', method: 'keyword', area: null };
 }

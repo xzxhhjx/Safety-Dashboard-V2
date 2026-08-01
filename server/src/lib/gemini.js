@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config.js';
+import { normalizeArea } from './classifier.js';
 
 const genAI = config.geminiApiKey ? new GoogleGenerativeAI(config.geminiApiKey) : null;
 const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
@@ -89,7 +90,9 @@ function buildPrompt(description, hazardLabel, hasImages) {
     ? 'You are provided with photos of the observation. Trust PHOTOS over text description.'
     : 'No photos are available — classify based on the description and hazard label alone.';
 
-  return `You are a construction site safety inspector AI. Classify into EXACTLY ONE category:
+  return `You are a construction site safety inspector AI.
+
+## Task 1: Classify hazard category into EXACTLY ONE:
 
 1. Confined Space (有限空间)
 2. Excavation & Trenching (开挖与沟槽)
@@ -108,13 +111,19 @@ function buildPrompt(description, hazardLabel, hasImages) {
 15. Environmental (环境)
 16. Others (其他)
 
+## Task 2: Identify the work area from the description/photos.
+
+Valid areas: HRSG, GTST, CCW/ACW, GSUT, ECB, FGA, FOPS, TP-03, ECP, CWP, Live Plant, Laydown
+
+If the area cannot be determined or doesn't match any valid area, use "Others".
+
 ${imageNote}
 
 Hazard label: ${hazardLabel || '(none)'}
 Description: ${description || '(none)'}
 
 Return JSON:
-{"category":"...","categoryCN":"...","confidence":"high"|"medium"|"low","reasoning":"Brief Chinese explanation of why this category fits"}`;
+{"category":"...","categoryCN":"...","confidence":"high"|"medium"|"low","area":"valid area or Others","reasoning":"Brief Chinese explanation of why this category fits"}`;
 }
 
 function parseResponse(text) {
@@ -123,18 +132,20 @@ function parseResponse(text) {
     const parsed = JSON.parse(cleaned);
     const category = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Others';
     const confidence = ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'low';
-    return { category, categoryCN: CATEGORY_CN_MAP[category], confidence, reasoning: parsed.reasoning || '' };
+    const area = normalizeArea(parsed.area) || null;
+    return { category, categoryCN: CATEGORY_CN_MAP[category], confidence, area, reasoning: parsed.reasoning || '' };
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
       try {
         const parsed = JSON.parse(match[0]);
         const category = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Others';
-        return { category, categoryCN: CATEGORY_CN_MAP[category], confidence: 'low', reasoning: parsed.reasoning || '' };
+        const area = normalizeArea(parsed.area) || null;
+        return { category, categoryCN: CATEGORY_CN_MAP[category], confidence: 'low', area, reasoning: parsed.reasoning || '' };
       } catch {}
     }
   }
-  return { category: 'Others', categoryCN: '其他', confidence: 'low', reasoning: 'Failed to parse response' };
+  return { category: 'Others', categoryCN: '其他', confidence: 'low', area: null, reasoning: 'Failed to parse response' };
 }
 
 function sleep(ms) {
