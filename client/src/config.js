@@ -56,8 +56,29 @@ export const HAZARD_CLASSIFICATION = [
 export const AI_CONFIDENCE_COLORS = { high: '#059669', medium: '#D97706', low: '#DC2626' };
 
 // --- Keyword-based hazard classification fallback ---
+
+/**
+ * Pre-process hazard name: extract real content from bracket/paren annotations.
+ * "其他[地面有油污]" → "地面有油污"
+ * "其他 - 电线裸露"  → "电线裸露"
+ */
+function processHazardName(rawName) {
+  let name = rawName.trim();
+  const match = name.match(/^(?:other|其他|其它)[\s\-:：\(\)\[\]]+\s*(.+)/i);
+  if (match && match[1]) {
+    let extracted = match[1].trim();
+    if (name.includes('(') || name.includes('（')) {
+      extracted = extracted.replace(/[\)）]$/, '');
+    }
+    return extracted || '其他';
+  }
+  if (/^(other|其他|其它)$/i.test(name)) return '其他';
+  return name;
+}
+
 export function classifyHazard(description, hazardLabel) {
-  const text = `${description || ''} ${hazardLabel || ''}`.toLowerCase();
+  const cleaned = hazardLabel ? processHazardName(hazardLabel) : '';
+  const text = `${description || ''} ${cleaned}`.toLowerCase();
   for (const item of HAZARD_CLASSIFICATION) {
     for (const kw of item.keywords) {
       if (text.includes(kw.toLowerCase())) return item;

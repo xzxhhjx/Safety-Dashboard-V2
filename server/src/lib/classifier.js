@@ -17,8 +17,32 @@ export const HAZARD_CLASSIFICATION = [
   { category: 'Others', cn: '其他', keywords: ['other', '其他', '其它'] },
 ];
 
+/**
+ * Pre-process hazard name: extract real content from bracket/paren annotations.
+ * "其他[地面有油污]" → "地面有油污"
+ * "其他 - 电线裸露"  → "电线裸露"
+ * "其他"             → "其他"
+ */
+export function processHazardName(rawName) {
+  let name = rawName.trim();
+  // "其他[xxx]" / "其他 - xxx" / "其他(xxx)" → extract the real content
+  const match = name.match(/^(?:other|其他|其它)[\s\-:：\(\)\[\]]+\s*(.+)/i);
+  if (match && match[1]) {
+    let extracted = match[1].trim();
+    // Strip trailing closing bracket/paren
+    if (name.includes('(') || name.includes('（')) {
+      extracted = extracted.replace(/[\)）]$/, '');
+    }
+    return extracted || '其他';
+  }
+  if (/^(other|其他|其它)$/i.test(name)) return '其他';
+  return name;
+}
+
 export function keywordClassify(description, hazardLabel) {
-  const text = `${description || ''} ${hazardLabel || ''}`.toLowerCase();
+  // Pre-process hazard name to extract real content from bracket format
+  const cleaned = hazardLabel ? processHazardName(hazardLabel) : '';
+  const text = `${description || ''} ${cleaned}`.toLowerCase();
   for (const item of HAZARD_CLASSIFICATION) {
     for (const kw of item.keywords) {
       if (text.includes(kw.toLowerCase())) {
