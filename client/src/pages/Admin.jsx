@@ -24,18 +24,19 @@ export default function Admin() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <button onClick={handleLogout}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition">
-          Logout
-        </button>
-      </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Admin Panel</h1>
+          <button onClick={handleLogout} className="btn-secondary">
+            Logout
+          </button>
+        </div>
 
-      <ExcelUpload />
-      <AIClassifyPanel />
-      <AwardsManager />
+        <ExcelUpload />
+        <AIClassifyPanel />
+        <AwardsManager />
+      </div>
     </div>
   );
 }

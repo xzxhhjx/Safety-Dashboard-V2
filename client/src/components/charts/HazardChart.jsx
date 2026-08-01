@@ -1,62 +1,72 @@
 import BaseChart from './BaseChart';
-import { CHART_COLORS } from '../../config';
 
+const APPLE_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#FF453A', '#5856D6', '#8E8E93'];
+
+/**
+ * Hazard Distribution — Donut chart.
+ * Top 5 categories + "Others" aggregation, legend on the right.
+ */
 export default function HazardChart({ data }) {
-  if (!data?.length) return <div className="chart-container flex items-center justify-center text-gray-600">No data</div>;
+  if (!data?.length) {
+    return (
+      <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
+        No data
+      </div>
+    );
+  }
 
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-
-  const pieData = data.map((d, i) => ({
+  const top5 = data.slice(0, 5);
+  const othersValue = data.slice(5).reduce((sum, d) => sum + d.value, 0);
+  const chartData = top5.map((d, i) => ({
     name: d.name,
     value: d.value,
-    itemStyle: { color: CHART_COLORS[i % CHART_COLORS.length] },
+    itemStyle: { color: APPLE_COLORS[i] },
   }));
+  if (othersValue > 0) {
+    chartData.push({
+      name: 'Others',
+      value: othersValue,
+      itemStyle: { color: APPLE_COLORS[5] },
+    });
+  }
 
   const option = {
     tooltip: {
       trigger: 'item',
-      backgroundColor: 'rgba(17, 24, 39, 0.92)',
-      borderColor: '#374151',
-      textStyle: { color: '#E5E7EB', fontSize: 13 },
-      formatter: (params) =>
-        `<div style="font-weight:600;margin-bottom:2px">${params.name}</div>` +
-        `<div style="color:#9CA3AF">${params.value} 项 (${params.percent}%)</div>`,
+      backgroundColor: 'rgba(255, 255, 255, 0.96)',
+      borderColor: 'rgba(0, 0, 0, 0.08)',
+      textStyle: { color: '#1D1D1F', fontSize: 13, fontFamily: 'inherit' },
+      formatter: (p) =>
+        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} items (${p.percent}%)</span>`,
+    },
+    legend: {
+      orient: 'vertical',
+      right: 4,
+      top: 'center',
+      itemWidth: 8,
+      itemHeight: 8,
+      itemGap: 10,
+      textStyle: { color: '#6E6E73', fontSize: 12, fontFamily: 'inherit' },
     },
     series: [{
       type: 'pie',
-      radius: ['48%', '75%'],
-      center: ['50%', '50%'],
-      avoidLabelOverlap: true,
-      itemStyle: {
-        borderRadius: 4,
-        borderColor: '#111827',
-        borderWidth: 3,
-      },
-      label: {
-        show: true,
-        position: 'outside',
-        formatter: '{b}',
-        color: '#9CA3AF',
-        fontSize: 11,
-        distanceToLabelLine: 4,
-      },
-      labelLine: {
-        lineStyle: { color: '#4B5563' },
-      },
+      radius: ['50%', '72%'],
+      center: ['38%', '50%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderColor: '#F5F5F7', borderWidth: 2, borderRadius: 2 },
+      label: { show: false },
       emphasis: {
-        label: {
-          show: true,
-          fontSize: 15,
-          fontWeight: 'bold',
-          formatter: '{b}\n{c} 项 ({d}%)',
-          lineHeight: 18,
-        },
+        label: { show: true, fontSize: 16, fontWeight: '600', formatter: '{d}%' },
         scale: true,
-        scaleSize: 8,
+        scaleSize: 6,
       },
-      data: pieData,
+      data: chartData,
     }],
   };
 
-  return <div className="chart-container-tall"><BaseChart option={option} height="100%" /></div>;
+  return (
+    <div className="chart-container-tall">
+      <BaseChart option={option} height="100%" />
+    </div>
+  );
 }

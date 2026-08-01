@@ -34,16 +34,17 @@ export default function AwardsManager() {
     }
   };
 
-  if (loading) return <div className="card">Loading awards...</div>;
+  if (loading) return <div className="card" style={{ color: 'var(--text-secondary)' }}>Loading awards...</div>;
 
   return (
     <div className="card mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Safety Awards</h2>
+        <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Safety Awards
+        </h2>
         <div className="flex gap-2">
-          <button onClick={addNew} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition">+ Add</button>
-          <button onClick={save} disabled={saving}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition disabled:opacity-50">
+          <button onClick={addNew} className="btn-secondary">+ Add</button>
+          <button onClick={save} disabled={saving} className="btn-primary">
             {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -62,12 +63,21 @@ export default function AwardsManager() {
             <tr key={a.id}>
               <td className="font-medium">{a.id}</td>
               <td>
-                <input type="number" value={a.score} onChange={e => updateAward(a.id, 'score', parseInt(e.target.value) || 0)}
-                  className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm w-24" />
+                <input
+                  type="number"
+                  value={a.score}
+                  onChange={e => updateAward(a.id, 'score', parseInt(e.target.value) || 0)}
+                  className="input-apple w-24"
+                  style={{ height: 32, fontSize: 13 }}
+                />
               </td>
               <td>
-                <select value={a.level} onChange={e => updateAward(a.id, 'level', e.target.value)}
-                  className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm">
+                <select
+                  value={a.level}
+                  onChange={e => updateAward(a.id, 'level', e.target.value)}
+                  className="input-apple"
+                  style={{ height: 32, fontSize: 13 }}
+                >
                   <option value="gold">Gold</option>
                   <option value="silver">Silver</option>
                   <option value="normal">Normal</option>

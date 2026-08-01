@@ -5,7 +5,7 @@ export default function ExcelUpload() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState([]);
-  const [progress, setProgress] = useState(null); // { current, total, inserted, images, errors }
+  const [progress, setProgress] = useState(null);
   const [result, setResult] = useState(null);
   const logEndRef = useRef(null);
   useEffect(() => {
@@ -71,12 +71,19 @@ export default function ExcelUpload() {
   };
 
   const pct = progress ? Math.round((progress.current / progress.total) * 100) : 0;
+  const LOG_COLORS = {
+    header: '#1D1D1F',
+    done: '#248A3D',
+    error: '#C44235',
+    info: '#6E6E73',
+  };
 
   return (
     <div className="card mb-6">
-      <h2 className="text-lg font-semibold mb-4">Upload Excel Data</h2>
+      <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+        Upload Excel Data
+      </h2>
 
-      {/* File input */}
       <div className="flex gap-4 items-center">
         <input
           type="file"
@@ -87,21 +94,21 @@ export default function ExcelUpload() {
             setProgress(null);
             setResult(null);
           }}
-          className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-gray-700 file:text-white hover:file:bg-gray-600"
+          className="text-sm"
+          style={{ color: 'var(--text-secondary)' }}
         />
         <button
           onClick={handleUpload}
           disabled={!file || loading}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium transition disabled:opacity-50"
+          className="btn-primary"
         >
           {loading ? 'Processing...' : 'Upload & Sync'}
         </button>
       </div>
 
-      {/* Progress bar */}
       {progress && (
         <div className="mt-3">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
             <span>
               {progress.inserted !== undefined
                 ? `${progress.inserted} inserted`
@@ -111,28 +118,35 @@ export default function ExcelUpload() {
             </span>
             <span>{pct}%</span>
           </div>
-          <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.08)' }}>
             <div
-              className={`h-full transition-all duration-300 rounded-full ${
-                result ? 'bg-emerald-500' : 'bg-blue-500'
-              }`}
-              style={{ width: `${pct}%` }}
+              className="h-full transition-all duration-300 rounded-full"
+              style={{
+                width: `${pct}%`,
+                background: result ? 'var(--system-green)' : 'var(--system-blue)',
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Log area */}
       {logs.length > 0 && (
-        <div className="mt-3 bg-gray-900 border border-gray-700 rounded p-3 max-h-64 overflow-y-auto font-mono text-xs">
+        <div
+          className="mt-3 rounded p-3 max-h-64 overflow-y-auto font-mono text-xs"
+          style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border-subtle)' }}
+        >
           {logs.map((entry, i) => (
-            <div key={i} className={`log-line ${
-              entry.type === 'header' ? 'text-white font-semibold border-b border-gray-700 pb-1 mb-1' :
-              entry.type === 'done' ? 'text-emerald-400' :
-              entry.type === 'error' ? 'text-red-400' :
-              'text-gray-400'
-            }`}>
-              <span className="text-gray-600 mr-2">{entry.time}</span>
+            <div
+              key={i}
+              style={{
+                color: LOG_COLORS[entry.type] || '#6E6E73',
+                fontWeight: entry.type === 'header' ? 600 : 400,
+                borderBottom: entry.type === 'header' ? '1px solid var(--border-subtle)' : 'none',
+                paddingBottom: entry.type === 'header' ? 4 : 0,
+                marginBottom: entry.type === 'header' ? 4 : 0,
+              }}
+            >
+              <span style={{ color: 'var(--text-tertiary)', marginRight: 8 }}>{entry.time}</span>
               {entry.text}
             </div>
           ))}

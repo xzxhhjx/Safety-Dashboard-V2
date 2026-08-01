@@ -2,6 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { classifyBatchStream, aiPause, aiResume, aiCancel } from '../api';
 import { Pause, Play, Square, Image, Tag, User, MapPin } from 'lucide-react';
 
+const LOG_COLORS = {
+  header: '#1D1D1F',
+  result: '#248A3D',
+  done: '#34C759',
+  pause: '#B25E00',
+  warn: '#B25E00',
+  error: '#C44235',
+  info: '#6E6E73',
+};
+
 export default function AIClassifyPanel() {
   const [provider, setProvider] = useState('gemini');
   const [scope, setScope] = useState('unanalyzed');
@@ -43,23 +53,15 @@ export default function AIClassifyPanel() {
 
           case 'classifying':
             setCurrentItem({
-              index: event.index,
-              total: event.total,
-              docId: event.docId,
-              description: event.description,
-              hazard: event.hazard,
-              submitter: event.submitter,
-              area: event.area,
-              hasImages: event.hasImages,
+              index: event.index, total: event.total, docId: event.docId,
+              description: event.description, hazard: event.hazard,
+              submitter: event.submitter, area: event.area, hasImages: event.hasImages,
             });
             break;
 
           case 'result':
             setCurrentItem(null);
-            addLog(
-              `${event.index}/${event.total}  ${event.docId}  →  ${event.category}  [${event.confidence}]  (${event.method})`,
-              'result'
-            );
+            addLog(`${event.index}/${event.total}  ${event.docId}  →  ${event.category}  [${event.confidence}]  (${event.method})`, 'result');
             break;
 
           case 'log':
@@ -67,17 +69,11 @@ export default function AIClassifyPanel() {
             break;
 
           case 'progress':
-            setProgress({
-              current: event.current,
-              total: event.total,
-              done: event.done,
-              errors: event.errors,
-            });
+            setProgress({ current: event.current, total: event.total, done: event.done, errors: event.errors });
             break;
 
           case 'paused':
-            setPaused(true);
-            setCurrentItem(null);
+            setPaused(true); setCurrentItem(null);
             addLog(`⏸ Paused at ${event.done}/${event.total}`, 'pause');
             break;
 
@@ -85,83 +81,61 @@ export default function AIClassifyPanel() {
             setCurrentItem(null);
             setResult({ cancelled: true, done: event.done, total: event.total });
             addLog(event.message, 'warn');
-            setRunning(false);
-            setPaused(false);
+            setRunning(false); setPaused(false);
             break;
 
           case 'done':
             setCurrentItem(null);
-            setProgress({
-              current: event.total,
-              total: event.total,
-              done: event.done,
-              errors: event.errors,
-            });
+            setProgress({ current: event.total, total: event.total, done: event.done, errors: event.errors });
             setResult({ done: event.done, total: event.total, skipped: event.skipped, errors: event.errors });
             addLog(`Complete! ${event.done} classified, ${event.skipped} skipped, ${event.errors} errors`, 'done');
-            setRunning(false);
-            setPaused(false);
+            setRunning(false); setPaused(false);
             break;
 
           case 'error':
             addLog(`Fatal error: ${event.message}`, 'error');
-            setRunning(false);
-            setPaused(false);
+            setRunning(false); setPaused(false);
             break;
         }
       }
     } catch (err) {
       addLog(`Connection error: ${err.message}`, 'error');
     } finally {
-      setRunning(false);
-      setPaused(false);
+      setRunning(false); setPaused(false);
     }
   };
 
-  const handlePause = async () => {
-    try { await aiPause(); } catch {}
-  };
-
-  const handleResume = async () => {
-    try {
-      await aiResume();
-      setPaused(false);
-    } catch {}
-  };
-
-  const handleCancel = async () => {
-    try { await aiCancel(); } catch {}
-  };
+  const handlePause = async () => { try { await aiPause(); } catch {} };
+  const handleResume = async () => { try { await aiResume(); setPaused(false); } catch {} };
+  const handleCancel = async () => { try { await aiCancel(); } catch {} };
 
   const pct = progress ? Math.round((progress.current / progress.total) * 100) : 0;
 
+  const progressColor = paused ? 'var(--system-orange)'
+    : result?.cancelled ? 'var(--system-red)'
+    : result ? 'var(--system-green)'
+    : 'var(--system-purple)';
+
   return (
     <div className="card mb-6">
-      <h2 className="text-lg font-semibold mb-4">AI Classification</h2>
+      <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+        AI Classification
+      </h2>
 
-      {/* Controls */}
       <div className="flex gap-4 items-end flex-wrap">
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500">Provider</span>
-          <select
-            value={provider}
-            onChange={e => setProvider(e.target.value)}
-            disabled={running}
-            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm disabled:opacity-50"
-          >
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Provider</span>
+          <select value={provider} onChange={e => setProvider(e.target.value)} disabled={running}
+            className="input-apple" style={{ minWidth: 160 }}>
             <option value="gemini">Gemini (Google)</option>
             <option value="deepseek">DeepSeek</option>
           </select>
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-gray-500">Scope</span>
-          <select
-            value={scope}
-            onChange={e => setScope(e.target.value)}
-            disabled={running}
-            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm disabled:opacity-50"
-          >
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Scope</span>
+          <select value={scope} onChange={e => setScope(e.target.value)} disabled={running}
+            className="input-apple" style={{ minWidth: 200 }}>
             <option value="last50">Last 50 Records (Test)</option>
             <option value="unanalyzed">Unanalyzed Records</option>
             <option value="others">"Others" Classification Only</option>
@@ -170,10 +144,7 @@ export default function AIClassifyPanel() {
         </label>
 
         {!running && (
-          <button
-            onClick={handleStart}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm font-medium transition"
-          >
+          <button onClick={handleStart} className="btn-primary" style={{ background: 'var(--system-purple)' }}>
             {result ? 'Start New Run' : 'Start AI Analysis'}
           </button>
         )}
@@ -181,34 +152,24 @@ export default function AIClassifyPanel() {
         {running && (
           <>
             {!paused ? (
-              <button
-                onClick={handlePause}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm font-medium transition flex items-center gap-1.5"
-              >
+              <button onClick={handlePause} className="btn-secondary" style={{ color: 'var(--system-orange)' }}>
                 <Pause className="w-4 h-4" /> Pause
               </button>
             ) : (
-              <button
-                onClick={handleResume}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded text-sm font-medium transition flex items-center gap-1.5"
-              >
+              <button onClick={handleResume} className="btn-primary" style={{ background: 'var(--system-green)' }}>
                 <Play className="w-4 h-4" /> Resume
               </button>
             )}
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition flex items-center gap-1.5"
-            >
+            <button onClick={handleCancel} className="btn-secondary" style={{ color: 'var(--system-red)' }}>
               <Square className="w-4 h-4" /> Cancel
             </button>
           </>
         )}
       </div>
 
-      {/* Progress bar */}
       {progress && (
         <div className="mt-3">
-          <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
             <span>
               {progress.done !== undefined
                 ? `${progress.done} / ${progress.total} classified`
@@ -218,40 +179,32 @@ export default function AIClassifyPanel() {
             </span>
             <span>{pct}%</span>
           </div>
-          <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-300 rounded-full ${
-                paused
-                  ? 'bg-yellow-500'
-                  : result?.cancelled
-                  ? 'bg-red-500'
-                  : result
-                  ? 'bg-emerald-500'
-                  : 'bg-purple-500'
-              }`}
-              style={{ width: `${pct}%` }}
-            />
+          <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.08)' }}>
+            <div className="h-full transition-all duration-300 rounded-full"
+              style={{ width: `${pct}%`, background: progressColor }} />
           </div>
         </div>
       )}
 
-      {/* Current item being classified */}
       {currentItem && (
-        <div className="mt-3 bg-purple-900/30 border border-purple-700/50 rounded p-3">
+        <div className="mt-3 rounded p-3"
+          style={{ background: 'rgba(88, 86, 214, 0.06)', border: '1px solid rgba(88, 86, 214, 0.15)' }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-block w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-            <span className="text-xs text-purple-300 font-semibold">
+            <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--system-purple)' }} />
+            <span className="text-xs font-semibold" style={{ color: 'var(--system-purple)' }}>
               Classifying {currentItem.index}/{currentItem.total}
             </span>
-            <span className="text-xs text-gray-500">· {currentItem.docId}</span>
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>· {currentItem.docId}</span>
             {currentItem.hasImages > 0 && (
-              <span className="text-xs text-gray-500 flex items-center gap-1">· <Image className="w-3 h-3" /> {currentItem.hasImages}</span>
+              <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
+                · <Image className="w-3 h-3" /> {currentItem.hasImages}
+              </span>
             )}
           </div>
-          <p className="text-sm text-gray-300 leading-relaxed">
-            {currentItem.description || <span className="text-gray-600 italic">No description</span>}
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+            {currentItem.description || <span className="italic" style={{ color: 'var(--text-tertiary)' }}>No description</span>}
           </p>
-          <div className="flex gap-3 mt-1.5 text-xs text-gray-500">
+          <div className="flex gap-3 mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             {currentItem.hazard && <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {currentItem.hazard}</span>}
             {currentItem.submitter && <span className="flex items-center gap-1"><User className="w-3 h-3" /> {currentItem.submitter}</span>}
             {currentItem.area && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {currentItem.area}</span>}
@@ -259,29 +212,19 @@ export default function AIClassifyPanel() {
         </div>
       )}
 
-      {/* Result log */}
       {logs.length > 0 && (
-        <div className="mt-3 bg-gray-900 border border-gray-700 rounded p-3 max-h-80 overflow-y-auto font-mono text-xs">
+        <div className="mt-3 rounded p-3 max-h-80 overflow-y-auto font-mono text-xs"
+          style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border-subtle)' }}>
           {logs.map((entry, i) => (
-            <div
-              key={i}
-              className={`log-line ${
-                entry.type === 'header'
-                  ? 'text-white font-semibold border-b border-gray-700 pb-1 mb-1'
-                  : entry.type === 'result'
-                  ? 'text-emerald-300'
-                  : entry.type === 'done'
-                  ? 'text-emerald-400'
-                  : entry.type === 'pause'
-                  ? 'text-yellow-400'
-                  : entry.type === 'warn'
-                  ? 'text-orange-400'
-                  : entry.type === 'error'
-                  ? 'text-red-400'
-                  : 'text-gray-400'
-              }`}
-            >
-              <span className="text-gray-600 mr-2">{entry.time}</span>
+            <div key={i}
+              style={{
+                color: LOG_COLORS[entry.type] || '#6E6E73',
+                fontWeight: entry.type === 'header' ? 600 : 400,
+                borderBottom: entry.type === 'header' ? '1px solid var(--border-subtle)' : 'none',
+                paddingBottom: entry.type === 'header' ? 4 : 0,
+                marginBottom: entry.type === 'header' ? 4 : 0,
+              }}>
+              <span style={{ color: 'var(--text-tertiary)', marginRight: 8 }}>{entry.time}</span>
               {entry.text}
             </div>
           ))}

@@ -1,33 +1,210 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   Design Tokens — macOS Sonoma / Apple Human Interface Guidelines
+   ========================================================================= */
+:root {
+  --bg-primary: #F5F5F7;
+  --bg-card: rgba(255, 255, 255, 0.78);
+  --text-primary: #1D1D1F;
+  --text-secondary: #6E6E73;
+  --text-tertiary: #AEAEB2;
+  --system-blue: #007AFF;
+  --system-green: #34C759;
+  --system-orange: #FF9F0A;
+  --system-red: #FF453A;
+  --system-purple: #5856D6;
+  --system-gray: #8E8E93;
+  --border-card: rgba(255, 255, 255, 0.65);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.06);
+  --radius-card: 16px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --text-size-caption: 11px;
+  --text-size-body: 13px;
+  --text-size-title: 15px;
+  --text-size-heading: 20px;
+  --row-height: 56px;
+  --input-height: 36px;
+}
+
+/* ===== Base ===== */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: var(--text-size-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.glass-card {
-  @apply bg-gray-900/80 backdrop-blur-md border border-gray-800 rounded-xl p-4;
+/* ===== Glass Card (macOS Sonoma frosted glass) ===== */
+.card, .glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
 }
 
-/* Card styles */
-.card { @apply bg-gray-900/80 backdrop-blur-md border border-gray-800 rounded-xl p-4; }
+/* ===== Section Title ===== */
+.section-title {
+  font-size: var(--text-size-title);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
 
-/* Table styles */
-.data-table th { @apply text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-4 py-3; }
-.data-table td { @apply px-4 py-2 text-sm text-gray-300 border-b border-gray-800; }
+/* ===== Data Table (Apple Mail / Notes style) ===== */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.data-table th {
+  text-align: left;
+  font-size: var(--text-size-caption);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.data-table td {
+  padding: 0 16px;
+  height: var(--row-height);
+  font-size: var(--text-size-body);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.data-table tbody tr {
+  transition: background 0.15s ease;
+}
+.data-table tbody tr:hover {
+  background: rgba(0, 122, 255, 0.04);
+}
 
-/* Badge styles */
-.badge { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium; }
-.badge-high { @apply bg-emerald-900/50 text-emerald-400 border border-emerald-700; }
-.badge-medium { @apply bg-amber-900/50 text-amber-400 border border-amber-700; }
-.badge-low { @apply bg-red-900/50 text-red-400 border border-red-700; }
+/* ===== Status Badges (capsule style) ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: var(--text-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.badge-closed   { background: rgba(52, 199, 89, 0.12); color: #248A3D; }
+.badge-open     { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
+.badge-pending  { background: rgba(142, 142, 147, 0.12); color: #5C5C5E; }
+.badge-overdue  { background: rgba(255, 69, 58, 0.12); color: #C44235; }
+/* Keep legacy badge classes for backward compatibility */
+.badge-high    { background: rgba(52, 199, 89, 0.12); color: #248A3D; }
+.badge-medium  { background: rgba(255, 159, 10, 0.12); color: #B25E00; }
+.badge-low     { background: rgba(255, 69, 58, 0.12); color: #C44235; }
 
-/* Scrollbar */
+/* ===== Input / Select (Apple style) ===== */
+.input-apple {
+  height: var(--input-height);
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-size-body);
+  font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-apple:focus {
+  border-color: var(--system-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+.input-apple::placeholder { color: var(--text-tertiary); }
+
+/* ===== Buttons ===== */
+.btn-primary {
+  height: var(--input-height);
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: var(--system-blue);
+  color: #FFF;
+  font-size: var(--text-size-body);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+.btn-primary:hover { background: #0066D6; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  height: var(--input-height);
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
+  font-size: var(--text-size-body);
+  font-weight: 400;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-secondary:hover { background: rgba(0, 0, 0, 0.04); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ===== Pagination Button ===== */
+.pagination-btn {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+.pagination-btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+.pagination-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ===== Chart Container Heights ===== */
+.chart-container      { width: 100%; height: 320px; }
+.chart-container-wide { width: 100%; height: 400px; }
+.chart-container-tall { width: 100%; height: 440px; }
+
+/* ===== Scrollbar (light) ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
 
-/* Chart containers — varied heights for visual hierarchy */
-.chart-container        { width: 100%; height: 350px; }
-.chart-container-wide   { width: 100%; height: 500px; }
-.chart-container-tall   { width: 100%; height: 550px; }
+/* ===== Misc ===== */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -3,15 +3,24 @@
 // Migrated from js/config.js — ESM format for React
 // =========================================================================
 
-// --- Chart color palette (16 colors, WCAG AA compliant for graphics) ---
+// --- Chart color palette (macOS Sonoma / Apple HIG) ---
 export const CHART_COLORS = [
-  '#2563EB', '#DC2626', '#D97706', '#059669', '#7C3AED', '#0891B2', '#DB2777', '#EA580C',
-  '#4F46E5', '#4D7C0F', '#0D9488', '#0284C7', '#C026D3', '#A16207', '#E11D48', '#64748B',
+  '#007AFF', '#34C759', '#FF9F0A', '#FF453A',
+  '#5856D6', '#8E8E93', '#FF6B35', '#00C7BE',
+  '#AF52DE', '#FF2D55', '#30B0C7', '#FFD60A',
+  '#32D74B', '#BF5AF2', '#64D2FF', '#AEAEB2',
 ];
 
-// --- Semantic colors ---
+// --- Apple semantic colors ---
 export const COLORS = {
-  SAFE: '#059669', DANGER: '#DC2626', WARN: '#D97706', NEUTRAL: '#64748B',
+  SAFE: '#34C759', DANGER: '#FF453A', WARN: '#FF9F0A', NEUTRAL: '#8E8E93',
+};
+
+// --- Status pie colors ---
+export const STATUS_COLORS = {
+  'Closed': '#34C759', '已关闭': '#34C759', 'Done': '#34C759',
+  'Open': '#FF9F0A', 'In Progress': '#007AFF',
+  'Overdue': '#FF453A', 'Pending': '#8E8E93',
 };
 
 // --- Excel/Firestore column key mapping ---
@@ -53,7 +62,7 @@ export const HAZARD_CLASSIFICATION = [
 ];
 
 // --- AI confidence level colors ---
-export const AI_CONFIDENCE_COLORS = { high: '#059669', medium: '#D97706', low: '#DC2626' };
+export const AI_CONFIDENCE_COLORS = { high: '#34C759', medium: '#FF9F0A', low: '#FF453A' };
 
 // --- Keyword-based hazard classification fallback ---
 

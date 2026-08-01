@@ -23,23 +23,33 @@ export default function AdminLogin({ onSuccess }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
       <div className="card w-full max-w-sm">
-        <h1 className="text-xl font-bold mb-6 text-center">Admin Login</h1>
+        <h1 className="text-xl font-semibold mb-6 text-center" style={{ color: 'var(--text-primary)' }}>
+          Admin Login
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Username</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" autoFocus />
+            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="input-apple w-full"
+              autoFocus
+            />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" />
+            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="input-apple w-full"
+            />
           </div>
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button type="submit" disabled={loading}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium transition disabled:opacity-50">
+          {error && <p className="text-sm" style={{ color: 'var(--system-red)' }}>{error}</p>}
+          <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
