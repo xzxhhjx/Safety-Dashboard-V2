@@ -1,12 +1,15 @@
 import BaseChart from './BaseChart';
+import { CHART_COLORS } from '../../config';
 
 const APPLE_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#FF453A', '#5856D6', '#8E8E93'];
 
 /**
  * Hazard Distribution — Donut chart.
- * Top 5 categories + "Others" aggregation, legend on the right.
+ *
+ * By default: Top 5 categories + "Others" aggregation, legend on the right.
+ * With showAll: every category rendered as its own slice, using full palette.
  */
-export default function HazardChart({ data }) {
+export default function HazardChart({ data, showAll = false }) {
   if (!data?.length) {
     return (
       <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
@@ -15,19 +18,31 @@ export default function HazardChart({ data }) {
     );
   }
 
-  const top5 = data.slice(0, 5);
-  const othersValue = data.slice(5).reduce((sum, d) => sum + d.value, 0);
-  const chartData = top5.map((d, i) => ({
-    name: d.name,
-    value: d.value,
-    itemStyle: { color: APPLE_COLORS[i] },
-  }));
-  if (othersValue > 0) {
-    chartData.push({
-      name: 'Others',
-      value: othersValue,
-      itemStyle: { color: APPLE_COLORS[5] },
-    });
+  let chartData;
+  let colors;
+
+  if (showAll) {
+    colors = data.length <= CHART_COLORS.length ? CHART_COLORS : [...CHART_COLORS, ...APPLE_COLORS];
+    chartData = data.map((d, i) => ({
+      name: d.name,
+      value: d.value,
+      itemStyle: { color: colors[i % colors.length] },
+    }));
+  } else {
+    const top5 = data.slice(0, 5);
+    const othersValue = data.slice(5).reduce((sum, d) => sum + d.value, 0);
+    chartData = top5.map((d, i) => ({
+      name: d.name,
+      value: d.value,
+      itemStyle: { color: APPLE_COLORS[i] },
+    }));
+    if (othersValue > 0) {
+      chartData.push({
+        name: 'Others',
+        value: othersValue,
+        itemStyle: { color: APPLE_COLORS[5] },
+      });
+    }
   }
 
   const option = {
@@ -45,8 +60,8 @@ export default function HazardChart({ data }) {
       top: 'center',
       itemWidth: 8,
       itemHeight: 8,
-      itemGap: 10,
-      textStyle: { color: '#6E6E73', fontSize: 12, fontFamily: 'inherit' },
+      itemGap: showAll ? 6 : 10,
+      textStyle: { color: '#6E6E73', fontSize: showAll ? 11 : 12, fontFamily: 'inherit' },
     },
     series: [{
       type: 'pie',

@@ -3,11 +3,10 @@ import Toolbar from '../components/layout/Toolbar';
 import KPICards from '../components/cards/KPICards';
 import { useStats } from '../hooks/useStats';
 import { useObservations } from '../hooks/useObservations';
-import MonthlyTrendChart from '../components/charts/MonthlyTrendChart';
 import StatusPie from '../components/charts/StatusPie';
+import HazardChart from '../components/charts/HazardChart';
 import TopRiskBars from '../components/charts/TopRiskBars';
 import DataTable from '../components/DataTable';
-import { COLORS } from '../config';
 import { LayoutList, CheckCircle2, AlertTriangle, MapPin } from 'lucide-react';
 
 const iconCls = "w-5 h-5";
@@ -35,11 +34,11 @@ export default function Overview() {
         {/* KPI Cards */}
         <KPICards cards={kpiCards} loading={statsLoading} />
 
-        {/* Row: Safety Trend + Status Ring */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="card lg:col-span-2">
-            <h2 className="section-title">Safety Trend</h2>
-            <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
+        {/* Row: Hazard Distribution Ring + Status Ring */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="card">
+            <h2 className="section-title">Hazard Distribution</h2>
+            <HazardChart data={stats?.hazardDist} showAll={true} />
           </div>
           <div className="card">
             <h2 className="section-title">Status Overview</h2>
