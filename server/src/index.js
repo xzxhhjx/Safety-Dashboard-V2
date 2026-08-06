@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { pool } from './db.js';
 import authRoutes from './routes/auth.js';
@@ -19,6 +22,14 @@ await app.register(cors, {
     : ['http://localhost:5173', 'http://localhost']
 });
 await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
+
+// Serve uploaded photos
+const __dirname = dirname(fileURLToPath(import.meta.url));
+await app.register(fastifyStatic, {
+  root: join(__dirname, '..', config.uploadDir),
+  prefix: '/uploads/',
+  decorateReply: false,
+});
 
 // Health check
 app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
