@@ -19,6 +19,9 @@ export default async function observationRoutes(app) {
     const conditions = [];
     const params = [];
 
+    if (request.query.unclosed === 'true') {
+      conditions.push(`(status NOT LIKE '%Closed%' AND status NOT LIKE '%已关闭%' AND status NOT LIKE '%关闭%' AND status NOT LIKE '%跳过%' AND status NOT LIKE '%Done%')`);
+    }
     if (status) {
       conditions.push('status = ?');
       params.push(status);
@@ -30,6 +33,10 @@ export default async function observationRoutes(app) {
     if (hazard) {
       conditions.push('hazard = ?');
       params.push(hazard);
+    }
+    if (request.query.ai_category) {
+      conditions.push('ai_category = ?');
+      params.push(request.query.ai_category);
     }
     if (keyword) {
       conditions.push('(description LIKE ? OR who LIKE ? OR submitter LIKE ?)');
@@ -79,7 +86,7 @@ export default async function observationRoutes(app) {
 
     const fields = [
       'id', 'hazard', 'status', 'dept', 'description', 'obs_time',
-      'submitter', 'obs_type', 'area', 'sub_area', 'who', 'photos',
+      'submitter', 'obs_type', 'area', 'sub_area', 'who', 'measures', 'photos',
       'ai_category', 'ai_category_cn', 'ai_confidence', 'ai_method',
       'ai_reasoning', 'ai_analyzed_at',
     ];
@@ -116,7 +123,7 @@ export default async function observationRoutes(app) {
   app.put('/api/observations/:id', { preHandler: [authMiddleware] }, async (request, reply) => {
     const allowedFields = [
       'hazard', 'status', 'dept', 'description', 'obs_time',
-      'submitter', 'obs_type', 'area', 'sub_area', 'who', 'photos',
+      'submitter', 'obs_type', 'area', 'sub_area', 'who', 'measures', 'photos',
       'ai_category', 'ai_category_cn', 'ai_confidence', 'ai_method',
       'ai_reasoning', 'ai_analyzed_at',
     ];

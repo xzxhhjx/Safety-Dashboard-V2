@@ -1,86 +1,106 @@
+import { useEffect, useMemo } from 'react';
 import BaseChart from './BaseChart';
 import { CHART_COLORS } from '../../config';
 
-const APPLE_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#FF453A', '#5856D6', '#8E8E93'];
-
 /**
- * Hazard Distribution — Donut chart.
+ * Hazard Distribution — Donut chart matching original Safety-Dashboard style.
  *
- * By default: Top 5 categories + "Others" aggregation, legend on the right.
- * With showAll: every category rendered as its own slice, using full palette.
+ * - Shows English category name as primary label, Chinese as subtitle
+ * - Legend hidden (companion HazardList provides the labels)
+ * - Supports limit: 5, 10, or 'all'
+ * - Returns processed categories for the accordion list
  */
-export default function HazardChart({ data, showAll = false }) {
-  if (!data?.length) {
+export default function HazardChart({ data, subData, limit = 'all', onProcessed }) {
+  const chartData = useMemo(() => {
+    if (!data?.length) return [];
+
+    // Map to unified format: { name (EN), cn, value, color }
+    let categories = data.map((d, i) => ({
+      name: d.category || d.name,
+      cn: d.category ? d.name : (d.cn || ''),
+      value: d.value,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    // Push Others to the end
+    categories.sort((a, b) => {
+      if (a.name === 'Others') return 1;
+      if (b.name === 'Others') return -1;
+      return b.value - a.value;
+    });
+
+    // Apply limit
+    if (limit !== 'all') {
+      const lim = parseInt(limit, 10);
+      if (categories.length > lim) {
+        categories = categories.slice(0, lim);
+      }
+    }
+
+    // Attach sub-category data from subData
+    if (subData?.length) {
+      categories = categories.map(cat => {
+        const sub = subData.find(s => s.category === cat.name);
+        return { ...cat, subs: sub ? sub.subs : [] };
+      });
+    }
+
+    return categories;
+  }, [data, subData, limit]);
+
+  // Notify parent of processed data (for accordion list)
+  useEffect(() => {
+    if (onProcessed) onProcessed(chartData);
+  }, [chartData, onProcessed]);
+
+  const option = useMemo(() => {
+    if (!chartData.length) return null;
+
+    const seriesData = chartData.map(d => ({
+      name: d.name,
+      value: d.value,
+      cn: d.cn,
+      itemStyle: { color: d.color },
+    }));
+
+    return {
+      tooltip: {
+        trigger: 'item',
+        formatter(params) {
+          return `<div style="font-weight:bold">${params.name}</div>
+                  <div style="color:#64748b">${params.data.cn || ''}</div>
+                  <div>${params.value} 项 (${params.percent}%)</div>`;
+        },
+      },
+      legend: { show: false },
+      series: [{
+        name: '隐患分类',
+        type: 'pie',
+        radius: ['45%', '70%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: true,
+        itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 },
+        label: { show: false, position: 'center' },
+        emphasis: {
+          label: { show: true, fontSize: 14, fontWeight: 'bold', formatter: '{b}\n{c}\n{d}%', lineHeight: 18 },
+          scale: true,
+          scaleSize: 10,
+        },
+        data: seriesData,
+      }],
+    };
+  }, [chartData]);
+
+  if (!chartData.length) {
     return (
-      <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="flex items-center justify-center h-full" style={{ color: '#94a3b8', fontSize: 13 }}>
         No data
       </div>
     );
   }
 
-  let chartData;
-  let colors;
-
-  if (showAll) {
-    colors = data.length <= CHART_COLORS.length ? CHART_COLORS : [...CHART_COLORS, ...APPLE_COLORS];
-    chartData = data.map((d, i) => ({
-      name: d.name,
-      value: d.value,
-      itemStyle: { color: colors[i % colors.length] },
-    }));
-  } else {
-    const top5 = data.slice(0, 5);
-    const othersValue = data.slice(5).reduce((sum, d) => sum + d.value, 0);
-    chartData = top5.map((d, i) => ({
-      name: d.name,
-      value: d.value,
-      itemStyle: { color: APPLE_COLORS[i] },
-    }));
-    if (othersValue > 0) {
-      chartData.push({
-        name: 'Others',
-        value: othersValue,
-        itemStyle: { color: APPLE_COLORS[5] },
-      });
-    }
-  }
-
-  const option = {
-    tooltip: {
-      trigger: 'item',
-      backgroundColor: 'rgba(255, 255, 255, 0.96)',
-      borderColor: 'rgba(0, 0, 0, 0.08)',
-      textStyle: { color: '#1D1D1F', fontSize: 13, fontFamily: 'inherit' },
-      formatter: (p) =>
-        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} items (${p.percent}%)</span>`,
-    },
-    legend: {
-      orient: 'vertical',
-      right: 4,
-      top: 'center',
-      itemWidth: 8,
-      itemHeight: 8,
-      itemGap: showAll ? 6 : 10,
-      textStyle: { color: '#6E6E73', fontSize: showAll ? 11 : 12, fontFamily: 'inherit' },
-    },
-    series: [{
-      type: 'pie',
-      radius: ['50%', '72%'],
-      center: ['38%', '50%'],
-      avoidLabelOverlap: false,
-      itemStyle: { borderColor: '#F5F5F7', borderWidth: 2, borderRadius: 2 },
-      label: { show: false },
-      emphasis: {
-        label: { show: true, fontSize: 16, fontWeight: '600', formatter: '{d}%' },
-        scale: true,
-        scaleSize: 6,
-      },
-      data: chartData,
-    }],
-  };
-
   return (
-    <div className="chart-container-tall">
+    <div style={{ flex: 1, minHeight: 380 }}>
       <BaseChart option={option} height="100%" />
     </div>
   );

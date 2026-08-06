@@ -19,7 +19,7 @@ export default function WorkAreas() {
     <div>
       <Toolbar title="Work Areas" subtitle="Area-centric safety analysis" />
 
-      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
+      <div className="px-6 py-6">
         {/* Search */}
         <div className="mb-6">
           <SearchInput value={areaSearch} onChange={setAreaSearch} placeholder="Search work areas..." />

@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { VALID_AREAS } from '../lib/classifier.js';
 
 export default async function statsRoutes(app) {
   app.get('/api/observations/stats', async (request, reply) => {
@@ -18,9 +19,13 @@ export default async function statsRoutes(app) {
     // Total count
     const [[{ totalCount }]] = await pool.query(`SELECT COUNT(*) AS totalCount FROM observations ${where}`, params);
 
-    // Closed count
+    // Closed count — "跳过", "关闭", "Closed", "已关闭", "Done" all count as closed
     const [[{ closedCount }]] = await pool.query(
-      `SELECT COUNT(*) AS closedCount FROM observations ${where} ${conditions.length ? 'AND' : 'WHERE'} status IN ('Closed', '已关闭', 'Done')`,
+      `SELECT COUNT(*) AS closedCount FROM observations ${where}
+       ${conditions.length ? 'AND' : 'WHERE'} (
+         status LIKE '%Closed%' OR status LIKE '%已关闭%' OR status LIKE '%关闭%'
+         OR status LIKE '%跳过%' OR status LIKE '%Done%'
+       )`,
       params
     );
 
@@ -57,15 +62,51 @@ export default async function statsRoutes(app) {
     }
     if (othersEntry) hazardDist.push(othersEntry);
 
-    // Area distribution
+    // Hazard sub-distribution — raw hazard names grouped by AI category (for accordion list)
+    const [hazardSubRaw] = await pool.query(
+      `SELECT
+         COALESCE(NULLIF(ai_category, ''), 'Others') AS category,
+         COALESCE(NULLIF(ai_category_cn, ''), '其他') AS category_cn,
+         hazard AS sub_name,
+         COUNT(*) AS value
+       FROM observations ${where}
+       GROUP BY category, category_cn, hazard
+       ORDER BY category, value DESC`,
+      params
+    );
+    // Group sub-categories by parent category, push Others last
+    const hazardSubDist = [];
+    let othersSubs = null;
+    for (const row of hazardSubRaw) {
+      if (row.category === 'Others') {
+        if (!othersSubs) othersSubs = { category: 'Others', category_cn: '其他', subs: [] };
+        othersSubs.subs.push({ name: row.sub_name || '(未分类)', value: row.value });
+      } else {
+        let entry = hazardSubDist.find(e => e.category === row.category);
+        if (!entry) {
+          entry = { category: row.category, category_cn: row.category_cn, subs: [] };
+          hazardSubDist.push(entry);
+        }
+        entry.subs.push({ name: row.sub_name || '(未分类)', value: row.value });
+      }
+    }
+    if (othersSubs) hazardSubDist.push(othersSubs);
+
+    // Area distribution — normalized to canonical site areas, everything else → Others
+    const areaCase = VALID_AREAS.map(a => `WHEN area = '${a}' THEN '${a}'`).join(' ');
     const [areaDist] = await pool.query(
-      `SELECT area AS name, COUNT(*) AS value FROM observations ${where} GROUP BY area ORDER BY value DESC`,
+      `SELECT
+         CASE ${areaCase} ELSE 'Others' END AS name,
+         COUNT(*) AS value
+       FROM observations ${where}
+       GROUP BY name
+       ORDER BY value DESC`,
       params
     );
 
     // Department ranking
     const [deptRank] = await pool.query(
-      `SELECT dept AS name, COUNT(*) AS value FROM observations ${where} GROUP BY dept ORDER BY value DESC LIMIT 10`,
+      `SELECT dept AS name, COUNT(*) AS value FROM observations ${where} GROUP BY dept ORDER BY value DESC`,
       params
     );
 
@@ -84,7 +125,27 @@ export default async function statsRoutes(app) {
 
     // Submitter ranking
     const [submitterRank] = await pool.query(
-      `SELECT submitter AS name, COUNT(*) AS value FROM observations ${where} GROUP BY submitter ORDER BY value DESC LIMIT 10`,
+      `SELECT submitter AS name, COUNT(*) AS value FROM observations ${where} GROUP BY submitter ORDER BY value DESC`,
+      params
+    );
+
+    // Heatmap data — area × hazard category cross-tabulation
+    const [heatmapRaw] = await pool.query(
+      `SELECT
+         area,
+         COALESCE(NULLIF(ai_category, ''), 'Others') AS hazard_category,
+         COUNT(*) AS cnt
+       FROM observations ${where}
+       GROUP BY area, hazard_category
+       ORDER BY cnt DESC`,
+      params
+    );
+
+    // Weekly top submitters (last 7 days, top 5)
+    const [weeklySubmitterRank] = await pool.query(
+      `SELECT submitter AS name, COUNT(*) AS value FROM observations ${where}
+       ${conditions.length ? 'AND' : 'WHERE'} obs_time >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       GROUP BY submitter ORDER BY value DESC LIMIT 5`,
       params
     );
 
@@ -94,11 +155,14 @@ export default async function statsRoutes(app) {
       areaCount,
       monthNew,
       hazardDist,
+      hazardSubDist,
       areaDist,
       deptRank,
       statusDist,
       monthlyTrend,
       submitterRank,
+      weeklySubmitterRank,
+      heatmapRaw,
     };
   });
 }

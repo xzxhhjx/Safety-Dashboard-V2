@@ -15,7 +15,7 @@ export default function Settings() {
     <div>
       <Toolbar title="Settings" subtitle="Platform configuration" />
 
-      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
+      <div className="px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SETTING_SECTIONS.map(s => (
             <div key={s.label} className="card flex items-start gap-4 opacity-60" style={{ padding: '20px' }}>

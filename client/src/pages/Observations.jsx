@@ -35,6 +35,8 @@ export default function Observations() {
       <Toolbar
         title="Observations"
         subtitle="Complete safety observation records"
+        filters={filters}
+        onFilterChange={f => { setFilters(f); setPage(1); }}
         actions={
           <button onClick={handleExport} className="btn-secondary">
             <Download className="w-3.5 h-3.5" /> Export CSV
@@ -42,7 +44,7 @@ export default function Observations() {
         }
       />
 
-      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
+      <div className="px-6 py-6">
         {/* Advanced Filter Bar */}
         <div className="card mb-6" style={{ padding: '16px 20px' }}>
           <FilterBar filters={filters} onChange={f => { setFilters(f); setPage(1); }} />

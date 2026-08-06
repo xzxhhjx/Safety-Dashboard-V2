@@ -10,6 +10,7 @@ CREATE TABLE observations (
     area        VARCHAR(255),
     sub_area    VARCHAR(255),
     who         VARCHAR(500),
+    measures    TEXT,
     photos      JSON,
     ai_category    VARCHAR(50),
     ai_category_cn VARCHAR(50),

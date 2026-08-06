@@ -3,16 +3,6 @@ export default function FilterBar({ filters, onChange }) {
 
   return (
     <div className="flex flex-wrap gap-3 items-end">
-      <FilterField label="Start Date">
-        <input type="date" value={filters.startDate || ''}
-          onChange={e => update('startDate', e.target.value)}
-          className="input-apple w-36" />
-      </FilterField>
-      <FilterField label="End Date">
-        <input type="date" value={filters.endDate || ''}
-          onChange={e => update('endDate', e.target.value)}
-          className="input-apple w-36" />
-      </FilterField>
       <FilterField label="Status">
         <select value={filters.status || ''} onChange={e => update('status', e.target.value)}
           className="input-apple">

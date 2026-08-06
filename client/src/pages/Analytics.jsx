@@ -2,47 +2,87 @@ import { useState } from 'react';
 import Toolbar from '../components/layout/Toolbar';
 import TabBar from '../components/ui/TabBar';
 import { useStats } from '../hooks/useStats';
-import HazardChart from '../components/charts/HazardChart';
+import HeatmapChart from '../components/charts/HeatmapChart';
 import TopRiskBars from '../components/charts/TopRiskBars';
 import MonthlyTrendChart from '../components/charts/MonthlyTrendChart';
-import DeptChart from '../components/charts/DeptChart';
-import SubmitterChart from '../components/charts/SubmitterChart';
 import AreaChart from '../components/charts/AreaChart';
+import DataTable from '../components/DataTable';
+import { useObservations } from '../hooks/useObservations';
 
 const TABS = [
   { key: 'risk',       label: 'Risk' },
   { key: 'trends',     label: 'Trends' },
   { key: 'areas',      label: 'Areas' },
-  { key: 'departments', label: 'Departments' },
-  { key: 'submitters', label: 'Submitters' },
+  { key: 'people',     label: 'People' },
 ];
 
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState('risk');
-  const [filters] = useState({});
+  const [filters, setFilters] = useState({});
+  const [drillDown, setDrillDown] = useState(null); // { area, hazard } from heatmap click
+  const [drillPage, setDrillPage] = useState(1);
+  const [drillPageSize, setDrillPageSize] = useState(10);
   const { stats, loading } = useStats(filters);
+  const drillFilters = drillDown
+    ? { ...filters, area: drillDown.area, ai_category: drillDown.hazard }
+    : filters;
+  const { observations, total, loading: drillLoading } = useObservations(drillPage, drillPageSize, drillFilters);
+
+  const handleCellClick = (cell) => {
+    setDrillDown(cell);
+    setDrillPage(1);
+  };
 
   return (
     <div>
-      <Toolbar title="Analytics" subtitle="Deep-dive into safety data" />
+      <Toolbar title="Analytics" subtitle="Deep-dive into safety data" filters={filters} onFilterChange={setFilters} />
 
-      <div className="px-8 py-6" style={{ maxWidth: 1440 }}>
+      <div className="px-6 py-6">
         {/* Tab Bar */}
         <div className="mb-6">
           <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* Risk Tab */}
+        {/* Risk Tab — Heatmap */}
         {activeTab === 'risk' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <div className="card">
-              <h2 className="section-title">Risk Category Distribution</h2>
-              <HazardChart data={stats?.hazardDist} />
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="section-title" style={{ marginBottom: 4 }}>区域-隐患热力图</h2>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
+                    Heatmap Analysis (Areas vs Hazards) — click a cell to drill down
+                  </p>
+                </div>
+                {drillDown && (
+                  <button
+                    className="btn-secondary"
+                    onClick={() => { setDrillDown(null); setDrillPage(1); }}
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+              <HeatmapChart data={stats?.heatmapRaw} onCellClick={handleCellClick} />
             </div>
-            <div className="card">
-              <h2 className="section-title">Top Risk Categories</h2>
-              <TopRiskBars data={stats?.hazardDist} />
-            </div>
+
+            {/* Drill-down Table */}
+            {drillDown && (
+              <div className="card">
+                <h2 className="section-title">
+                  Records: {drillDown.area} — {drillDown.hazard}
+                </h2>
+                <DataTable
+                  data={observations}
+                  total={total}
+                  page={drillPage}
+                  pageSize={drillPageSize}
+                  onPageChange={setDrillPage}
+                  onPageSizeChange={(size) => { setDrillPageSize(size); setDrillPage(1); }}
+                  loading={drillLoading}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -84,30 +124,18 @@ export default function Analytics() {
           </div>
         )}
 
-        {/* Departments Tab */}
-        {activeTab === 'departments' && (
+        {/* People Tab — Submitters + Departments side by side */}
+        {activeTab === 'people' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
-              <h2 className="section-title">Observations by Department</h2>
-              <DeptChart data={stats?.deptRank} />
-            </div>
-            <div className="card">
-              <h2 className="section-title">Department Rankings</h2>
-              <TopRiskBars data={stats?.deptRank} />
-            </div>
-          </div>
-        )}
-
-        {/* Submitters Tab */}
-        {activeTab === 'submitters' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="card">
-              <h2 className="section-title">Top Submitters</h2>
-              <SubmitterChart data={stats?.submitterRank} />
-            </div>
-            <div className="card">
-              <h2 className="section-title">Submitter Rankings</h2>
+              <h2 className="section-title">提交人</h2>
+              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>Submitters</p>
               <TopRiskBars data={stats?.submitterRank} />
+            </div>
+            <div className="card">
+              <h2 className="section-title">提交人部门</h2>
+              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>Departments</p>
+              <TopRiskBars data={stats?.deptRank} />
             </div>
           </div>
         )}

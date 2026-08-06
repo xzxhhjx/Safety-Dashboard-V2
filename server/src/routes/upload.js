@@ -2,7 +2,7 @@ import { PassThrough } from 'node:stream';
 import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { downloadAndCacheImages } from '../lib/storage.js';
-import { normalizeArea } from '../lib/classifier.js';
+import { normalizeArea, normalizeSubmitter } from '../lib/classifier.js';
 import xlsx from 'xlsx';
 
 export default async function uploadRoutes(app) {
@@ -56,6 +56,7 @@ export default async function uploadRoutes(app) {
         obs_type: ['Type of the observation', '观察项分类', '观察者类型'],
         area: ['Where', 'Area', '区域', '具体位置'],
         who: ['Who', 'Personnel', 'involved', '当事人', '涉及人员', '责任人'],
+        measures: ['采取的措施', '已采取的措施', '措施', 'Action taken', 'Measures', 'Actions'],
         photos: ['Photo', '图片', '现场照片'],
       };
 
@@ -104,10 +105,11 @@ export default async function uploadRoutes(app) {
           dept: colMap.dept ? row[colMap.dept] : null,
           description: colMap.description ? row[colMap.description] : null,
           obs_time: rawTime ? parseDate(rawTime) : null,
-          submitter: rawName || null,
+          submitter: normalizeSubmitter(rawName) || null,
           obs_type: getRowVal(row, 'obs_type') || null,
           area: normalizeArea(getRowVal(row, 'area')) || null,
           who: getRowVal(row, 'who') || null,
+          measures: getRowVal(row, 'measures') || null,
           photos: colMap.photos ? parsePhotos(row[colMap.photos]) : [],
         };
       }).filter(r => r.hazard || r.description);
@@ -138,7 +140,7 @@ export default async function uploadRoutes(app) {
       // --- Phase 5: Insert / Update / Skip ---
       const fields = [
         'id', 'hazard', 'status', 'dept', 'description', 'obs_time',
-        'submitter', 'obs_type', 'area', 'who', 'photos',
+        'submitter', 'obs_type', 'area', 'who', 'measures', 'photos',
       ];
 
       let inserted = 0;

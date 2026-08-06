@@ -1,12 +1,17 @@
 import BaseChart from './BaseChart';
-import { STATUS_COLORS } from '../../config';
+import { COLORS } from '../../config';
 
 /**
- * Status Overview — Donut chart with center "Closed Rate" text.
- * Closed = green, Open = orange, everything else = red (overdue).
+ * Status Overview — Two-slice donut: 已关闭 (Closed) vs 未关闭 (Open).
+ * Center shows the closed rate percentage.
  */
-export default function StatusPie({ data, closedRate }) {
-  if (!data?.length) {
+export default function StatusPie({ totalCount, closedRate }) {
+  const total = totalCount || 0;
+  const closedPct = closedRate || 0;
+  const closedCount = Math.round(total * closedPct / 100);
+  const openCount = total - closedCount;
+
+  if (total === 0) {
     return (
       <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
         No data
@@ -14,11 +19,10 @@ export default function StatusPie({ data, closedRate }) {
     );
   }
 
-  const pieData = data.map(d => ({
-    name: d.name,
-    value: d.value,
-    itemStyle: { color: STATUS_COLORS[d.name] || '#FF453A' },
-  }));
+  const pieData = [
+    { name: '已关闭', value: closedCount, itemStyle: { color: COLORS.SAFE } },
+    { name: '未关闭', value: openCount, itemStyle: { color: COLORS.DANGER } },
+  ];
 
   const option = {
     tooltip: {
@@ -27,7 +31,7 @@ export default function StatusPie({ data, closedRate }) {
       borderColor: 'rgba(0, 0, 0, 0.08)',
       textStyle: { color: '#1D1D1F', fontSize: 13, fontFamily: 'inherit' },
       formatter: (p) =>
-        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} items (${p.percent}%)</span>`,
+        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} 项 (${p.percent}%)</span>`,
     },
     graphic: [
       {
@@ -35,10 +39,10 @@ export default function StatusPie({ data, closedRate }) {
         left: 'center',
         top: '42%',
         style: {
-          text: `${closedRate || 0}%`,
+          text: `${closedPct}%`,
           textAlign: 'center',
           fill: '#1D1D1F',
-          fontSize: 26,
+          fontSize: 28,
           fontWeight: '600',
           fontFamily: 'SF Pro Display, PingFang SC, sans-serif',
         },
@@ -48,7 +52,7 @@ export default function StatusPie({ data, closedRate }) {
         left: 'center',
         top: '58%',
         style: {
-          text: 'Closed Rate',
+          text: '关闭率',
           textAlign: 'center',
           fill: '#6E6E73',
           fontSize: 12,
@@ -61,20 +65,20 @@ export default function StatusPie({ data, closedRate }) {
       radius: ['55%', '78%'],
       center: ['50%', '50%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderColor: '#F5F5F7', borderWidth: 2, borderRadius: 2 },
+      itemStyle: { borderColor: '#fff', borderWidth: 2, borderRadius: 5 },
       label: { show: false },
       emphasis: {
         label: { show: true, fontSize: 15, fontWeight: '600', formatter: '{d}%' },
         scale: true,
-        scaleSize: 6,
+        scaleSize: 8,
       },
       data: pieData,
     }],
   };
 
   return (
-    <div className="chart-container">
-      <BaseChart option={option} />
+    <div style={{ flex: 1, minHeight: 280 }}>
+      <BaseChart option={option} height="100%" />
     </div>
   );
 }

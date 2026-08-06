@@ -16,8 +16,8 @@ export function useObservations(page, pageSize, filters) {
     return () => { cancelled = true; };
   }, [
     page, pageSize,
-    filters?.status, filters?.area, filters?.hazard, filters?.keyword,
-    filters?.startDate, filters?.endDate,
+    filters?.status, filters?.area, filters?.hazard, filters?.ai_category, filters?.keyword,
+    filters?.startDate, filters?.endDate, filters?.unclosed,
   ]);
 
   return { observations: data.data, total: data.total, page: data.page, loading, error };

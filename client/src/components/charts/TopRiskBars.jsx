@@ -13,21 +13,19 @@ export default function TopRiskBars({ data }) {
     );
   }
 
-  const items = data.slice(0, 8);
-  const max = items[0].value;
+  const max = data[0].value;
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div className="flex flex-col gap-2">
-      {items.map((d, i) => {
+      {data.map((d, i) => {
         const pct = max > 0 ? (d.value / max) * 100 : 0;
         const share = total > 0 ? Math.round((d.value / total) * 100) : 0;
         return (
           <div key={d.name} className="flex items-center gap-2.5">
             <span
-              className="text-xs font-medium truncate flex-shrink-0"
-              style={{ width: 120, color: 'var(--text-primary)' }}
-              title={d.name}
+              className="text-xs font-medium flex-shrink-0"
+              style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap' }}
             >
               {d.name}
             </span>

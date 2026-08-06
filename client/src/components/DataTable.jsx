@@ -1,27 +1,27 @@
 import { useState, useCallback } from 'react';
-import { classifyHazard, AI_CONFIDENCE_COLORS } from '../config';
 import ImageModal from './ImageModal';
 import Badge from './ui/Badge';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Image } from 'lucide-react';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const DEFAULT_COLUMNS = [
-  { key: 'id', label: 'ID', width: 80 },
-  { key: 'photo', label: 'Photo', width: 56 },
-  { key: 'hazard', label: 'Hazard', width: 160 },
-  { key: 'status', label: 'Status', width: 100 },
-  { key: 'area', label: 'Area', width: 120 },
-  { key: 'dept', label: 'Dept', width: 120 },
-  { key: 'description', label: 'Description', flex: 1 },
-  { key: 'submitter', label: 'Submitter', width: 100 },
-  { key: 'date', label: 'Date', width: 110 },
-  { key: 'ai_category', label: 'AI Category', width: 130 },
+  { key: 'obs_time', label: '提交时间', width: 150 },
+  { key: 'submitter', label: '提交人', width: 90 },
+  { key: 'dept', label: '提交人部门', width: 120 },
+  { key: 'area', label: '隐患所在区域', width: 130 },
+  { key: 'obs_type', label: '属性', width: 72 },
+  { key: 'hazard', label: '隐患类型', width: 140 },
+  { key: 'description', label: '描述', width: 200 },
+  { key: 'measures', label: '采取的措施', width: 160 },
+  { key: 'status', label: '当前状态', width: 100 },
+  { key: 'photos', label: '图片', width: 70 },
 ];
 
 export default function DataTable({
   data, total, page, pageSize, onPageChange, onPageSizeChange, loading,
   selectable = false, onSelectionChange, onExport, columns,
+  hidePagination = false,
 }) {
   const [modal, setModal] = useState({ open: false, images: [], index: 0 });
   const [selected, setSelected] = useState(new Set());
@@ -47,36 +47,52 @@ export default function DataTable({
 
   const renderCell = (row, col) => {
     switch (col.key) {
-      case 'photo':
-        return Array.isArray(row.photos) && row.photos[0] && !row.photos[0].startsWith('__FAILED') ? (
-          <img src={row.photos[0]} alt="" className="w-10 h-10 object-cover rounded-md cursor-pointer hover:opacity-80 transition"
-            style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
-            onClick={() => setModal({ open: true, images: row.photos, index: 0 })} />
-        ) : (
-          <span className="w-10 h-10 rounded-md flex items-center justify-center"
-            style={{ background: 'rgba(0,0,0,0.04)', color: 'var(--text-secondary)', fontSize: 10 }}>—</span>
+      case 'obs_time': {
+        const d = row.obs_time ? String(row.obs_time).slice(0, 10) : '';
+        return <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{d || '—'}</span>;
+      }
+      case 'obs_type': {
+        const type = (row.obs_type || '').toLowerCase();
+        const isSafe = type.includes('positive') || type.includes('good') || type.includes('标准');
+        const isUnsafe = type.includes('negative') || type.includes('unsafe') || type.includes('不安全');
+        return (
+          <span className="badge" style={{
+            background: isSafe ? 'rgba(52,199,89,0.12)' : isUnsafe ? 'rgba(255,69,58,0.12)' : 'rgba(142,142,147,0.12)',
+            color: isSafe ? '#248A3D' : isUnsafe ? '#C44235' : '#5C5C5E',
+          }}>
+            {isSafe ? 'Safe' : isUnsafe ? 'Risk' : '—'}
+          </span>
         );
+      }
       case 'status':
         return <Badge status={row.status}>{row.status || '—'}</Badge>;
       case 'description':
         return (
-          <div className="line-clamp-2 text-sm max-w-[240px]" title={row.description}>
+          <div className="text-sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} title={row.description}>
             {row.description || '—'}
           </div>
         );
-      case 'date':
-        return <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{row.obs_time || '—'}</span>;
-      case 'ai_category': {
-        const fallback = classifyHazard(row.description, row.hazard);
-        const aiCat = row.ai_category || fallback.category;
-        const aiCatCN = row.ai_category_cn || fallback.cn;
-        const aiConf = row.ai_confidence || 'low';
+      case 'measures':
         return (
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: AI_CONFIDENCE_COLORS[aiConf] || '#8E8E93' }} />
-            <span className="text-xs">{aiCatCN}</span>
+          <div className="line-clamp-2 text-xs max-w-[200px]" title={row.measures}>
+            {row.measures || '—'}
           </div>
+        );
+      case 'photos': {
+        const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0
+          && row.photos.some(p => p && !p.startsWith('__FAILED'));
+        return hasPhotos ? (
+          <button
+            className="btn-secondary flex items-center gap-1"
+            style={{ padding: '4px 10px', height: 28, fontSize: 12, whiteSpace: 'nowrap' }}
+            onClick={() => setModal({ open: true, images: row.photos.filter(p => p && !p.startsWith('__FAILED')), index: 0 })}
+            title="点击查看图片"
+          >
+            <Image className="w-3.5 h-3.5" />
+            查看
+          </button>
+        ) : (
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>—</span>
         );
       }
       default:
@@ -147,6 +163,7 @@ export default function DataTable({
           </div>
 
           {/* Pagination */}
+          {!hidePagination && (
           <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <div className="flex items-center gap-3">
               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -169,6 +186,7 @@ export default function DataTable({
               </button>
             </div>
           </div>
+          )}
         </>
       )}
 

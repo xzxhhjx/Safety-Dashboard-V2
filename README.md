@@ -9,7 +9,7 @@ Construction site safety observation analytics platform. Docker Compose self-hos
 | Frontend | React 19 + Vite 6 + Tailwind 4 + ECharts 5 |
 | Backend | Fastify 5 + mysql2 + JWT |
 | Database | MySQL 8 |
-| AI | Gemini 2.5 Flash |
+| AI | Gemini 2.5 Flash + DeepSeek |
 | Proxy | Nginx (Alpine) |
 
 ## Quick Start

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import '../../styles/echarts-theme.js'; // registers 'apple-enterprise'
 
-export default function BaseChart({ option, height = '400px' }) {
+export default function BaseChart({ option, height = '400px', onEvents }) {
   const ref = useRef(null);
   const chartRef = useRef(null);
 
@@ -31,6 +31,16 @@ export default function BaseChart({ option, height = '400px' }) {
       chartRef.current.resize();
     }
   }, [option]);
+
+  // Bind custom event handlers
+  useEffect(() => {
+    if (chartRef.current && onEvents) {
+      for (const [event, handler] of Object.entries(onEvents)) {
+        chartRef.current.off(event);
+        chartRef.current.on(event, handler);
+      }
+    }
+  }, [onEvents, option]);
 
   return <div ref={ref} style={{ width: '100%', height }} />;
 }

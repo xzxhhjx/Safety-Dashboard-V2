@@ -3,17 +3,32 @@
 // Migrated from js/config.js — ESM format for React
 // =========================================================================
 
-// --- Chart color palette (macOS Sonoma / Apple HIG) ---
+// --- Chart color palette (16 colors, HSL uniform distribution, WCAG AA) ---
 export const CHART_COLORS = [
-  '#007AFF', '#34C759', '#FF9F0A', '#FF453A',
-  '#5856D6', '#8E8E93', '#FF6B35', '#00C7BE',
-  '#AF52DE', '#FF2D55', '#30B0C7', '#FFD60A',
-  '#32D74B', '#BF5AF2', '#64D2FF', '#AEAEB2',
+  '#2563EB', // Blue
+  '#DC2626', // Red
+  '#D97706', // Amber
+  '#059669', // Emerald
+  '#7C3AED', // Violet
+  '#0891B2', // Cyan
+  '#DB2777', // Pink
+  '#EA580C', // Orange
+  '#4F46E5', // Indigo
+  '#4D7C0F', // Lime
+  '#0D9488', // Teal
+  '#0284C7', // Sky
+  '#C026D3', // Fuchsia
+  '#A16207', // Gold
+  '#E11D48', // Rose
+  '#64748B', // Slate
 ];
 
-// --- Apple semantic colors ---
+// --- Semantic colors ---
 export const COLORS = {
-  SAFE: '#34C759', DANGER: '#FF453A', WARN: '#FF9F0A', NEUTRAL: '#8E8E93',
+  SAFE:    '#059669',  // Green — closed / safe / positive
+  DANGER:  '#DC2626',  // Red   — open / danger / negative
+  WARN:    '#D97706',  // Amber — warning / mixed
+  NEUTRAL: '#64748B',  // Gray  — neutral / no data
 };
 
 // --- Status pie colors ---
