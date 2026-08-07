@@ -40,6 +40,8 @@ app.get('/uploads/*', async (request, reply) => {
   const relativePath = request.params['*'];
   const filePath = join(uploadRoot, relativePath);
 
+  app.log.info(`[uploads] wildcard=${relativePath} resolved=${filePath} exists=${existsSync(filePath)}`);
+
   // 1 — serve from local disk
   if (existsSync(filePath)) {
     try {
@@ -73,7 +75,11 @@ app.get('/uploads/*', async (request, reply) => {
     } catch {}
   }
 
-  return reply.status(404).send({ error: 'Image not found' });
+  // Return debug info so we can see what's happening
+  return reply.status(404).send({
+    error: 'Image not found',
+    debug: { wildcard: relativePath, resolved: filePath, uploadRoot, configUploadDir: config.uploadDir },
+  });
 });
 
 if (remoteUploadBase) {
