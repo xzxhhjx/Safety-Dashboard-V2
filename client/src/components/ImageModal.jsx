@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, X, ImageOff } from 'lucide-react';
 
 export default function ImageModal({ images, initialIndex = 0, onClose }) {
   const [index, setIndex] = useState(initialIndex);
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when switching images
+  useEffect(() => { setImgError(false); }, [index]);
+
+  const handleImgError = useCallback(() => { setImgError(true); }, []);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -37,8 +43,16 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
         </>
       )}
 
-      <img src={validImages[index]} alt="" className="max-w-[90vw] max-h-[90vh] object-contain"
-        onClick={e => e.stopPropagation()} />
+      {imgError ? (
+        <div className="flex flex-col items-center gap-3 text-gray-400" onClick={e => e.stopPropagation()}>
+          <ImageOff className="w-16 h-16" />
+          <span className="text-sm">图片加载失败</span>
+          <span className="text-xs text-gray-500">请将服务器上的图片同步到本地</span>
+        </div>
+      ) : (
+        <img src={validImages[index]} alt="" className="max-w-[90vw] max-h-[90vh] object-contain"
+          onClick={e => e.stopPropagation()} onError={handleImgError} />
+      )}
 
       {validImages.length > 1 && (
         <div className="absolute bottom-4 text-gray-400 text-sm">

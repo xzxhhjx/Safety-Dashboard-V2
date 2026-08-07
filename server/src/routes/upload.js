@@ -1,8 +1,11 @@
 import { PassThrough } from 'node:stream';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { pool } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { downloadAndCacheImages } from '../lib/storage.js';
+import { downloadAndCacheImages, isExternalUrl } from '../lib/storage.js';
 import { normalizeArea, normalizeSubmitter } from '../lib/classifier.js';
+import { config } from '../config.js';
 import xlsx from 'xlsx';
 
 export default async function uploadRoutes(app) {
@@ -176,9 +179,9 @@ export default async function uploadRoutes(app) {
           const existingStatus = existingMap.get(record.id);
 
           if (!existingStatus) {
-            // --- New record: INSERT ---
+            // --- New record: download external images to server, then INSERT ---
             if (Array.isArray(record.photos) && record.photos.length > 0) {
-              const hasExternal = record.photos.some(u => typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://')));
+              const hasExternal = record.photos.some(u => typeof u === 'string' && isExternalUrl(u));
               if (hasExternal) {
                 send({ type: 'log', phase: 'image', message: `[${i + 1}/${total}] Downloading ${record.photos.length} image(s) for #${record.id}...` });
                 const localPaths = await downloadAndCacheImages(record.id, record.photos);
@@ -206,7 +209,20 @@ export default async function uploadRoutes(app) {
             );
             updated++;
           } else {
-            // --- No meaningful change: SKIP ---
+            // --- No meaningful change: repair photos if local files are missing ---
+            const [existingRows] = await pool.query(
+              'SELECT photos FROM observations WHERE id = ?', [record.id]
+            );
+            const existingPhotos = existingRows.length > 0 ? safeParsePhotos(existingRows[0].photos) : [];
+            const hasMissingLocal = existingPhotos.some(p =>
+              p && p.startsWith('/uploads/') && !existsSync(join(config.uploadDir, p.replace('/uploads/', '')))
+            );
+            if (hasMissingLocal && Array.isArray(record.photos) && record.photos.some(u => isExternalUrl(u))) {
+              send({ type: 'log', phase: 'image', message: `[${i + 1}/${total}] Re-downloading ${record.photos.length} image(s) for #${record.id}...` });
+              const localPaths = await downloadAndCacheImages(record.id, record.photos);
+              await pool.query('UPDATE observations SET photos = ? WHERE id = ?', [JSON.stringify(localPaths), record.id]);
+              imagesDownloaded++;
+            }
             skipped++;
           }
         } catch (err) {
@@ -261,4 +277,15 @@ function parsePhotos(val) {
   if (!str) return [];
   try { const p = JSON.parse(str); return Array.isArray(p) ? p : [str]; } catch {}
   return str.split(/[,;\n\r]+/).map(s => s.trim()).filter(Boolean);
+}
+
+function safeParsePhotos(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  try {
+    const p = JSON.parse(String(val));
+    return Array.isArray(p) ? p : [];
+  } catch {
+    return [];
+  }
 }
