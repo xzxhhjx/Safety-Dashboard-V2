@@ -47,7 +47,7 @@ export default function ImageModal({ images, initialIndex = 0, onClose }) {
         <div className="flex flex-col items-center gap-3 text-gray-400" onClick={e => e.stopPropagation()}>
           <ImageOff className="w-16 h-16" />
           <span className="text-sm">图片加载失败</span>
-          <span className="text-xs text-gray-500">请将服务器上的图片同步到本地</span>
+          <span className="text-xs text-gray-500">图片文件不存在或无法访问</span>
         </div>
       ) : (
         <img src={validImages[index]} alt="" className="max-w-[90vw] max-h-[90vh] object-contain"

@@ -1,10 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
-import fastifyStatic from '@fastify/static';
-import { join, dirname } from 'node:path';
+import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { config } from './config.js';
 import { pool } from './db.js';
@@ -25,57 +24,59 @@ await app.register(cors, {
 });
 await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
 
-// Serve uploaded photos
+// Serve uploaded photos and proxy fallback
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const uploadRoot = join(__dirname, '..', config.uploadDir);
-await app.register(fastifyStatic, {
-  root: uploadRoot,
-  prefix: '/uploads/',
-  decorateReply: false,
-});
+const remoteUploadBase = process.env.REMOTE_UPLOAD_BASE || '';
 
-// Image proxy fallback — fetch missing images from remote production server
-const remoteUploadBase = process.env.REMOTE_UPLOAD_BASE;
-if (remoteUploadBase) {
-  app.setNotFoundHandler(async (request, reply) => {
-    // Only intercept /uploads/ paths; everything else gets normal 404
-    if (!request.url.startsWith('/uploads/')) {
-      return reply.status(404).send({ error: 'Not found' });
+const MIME_TYPES = {
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.png': 'image/png', '.gif': 'image/gif',
+  '.webp': 'image/webp', '.svg': 'image/svg+xml',
+  '.bmp': 'image/bmp',
+};
+
+app.get('/uploads/*', async (request, reply) => {
+  const relativePath = request.params['*'];
+  const filePath = join(uploadRoot, relativePath);
+
+  // 1 — serve from local disk
+  if (existsSync(filePath)) {
+    try {
+      const ext = extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'image/jpeg';
+      const data = await readFile(filePath);
+      return reply.type(contentType).send(data);
+    } catch (err) {
+      app.log.warn(`[uploads] Read error ${filePath}: ${err.message}`);
     }
+  }
 
+  // 2 — proxy from remote server (local dev only)
+  if (remoteUploadBase) {
     try {
       const remoteUrl = `${remoteUploadBase.replace(/\/+$/, '')}${request.url}`;
-      app.log.info(`[image-proxy] Fetching ${remoteUrl}`);
-
       const res = await fetch(remoteUrl, { signal: AbortSignal.timeout(15000) });
-      if (!res.ok) {
-        return reply.status(404).send({ error: 'Image not found on remote' });
+      if (res.ok) {
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const contentType = res.headers.get('content-type') || 'image/jpeg';
+
+        // cache locally
+        try {
+          const localDir = dirname(filePath);
+          if (!existsSync(localDir)) await mkdir(localDir, { recursive: true });
+          await writeFile(filePath, buffer);
+        } catch {}
+
+        return reply.type(contentType).send(buffer);
       }
+    } catch {}
+  }
 
-      const buffer = Buffer.from(await res.arrayBuffer());
-      const contentType = res.headers.get('content-type') || 'image/jpeg';
+  return reply.status(404).send({ error: 'Image not found' });
+});
 
-      // Cache locally so next request hits the disk
-      try {
-        const relativePath = request.url.replace('/uploads/', '');
-        const localPath = join(uploadRoot, relativePath);
-        const localDir = dirname(localPath);
-        if (!existsSync(localDir)) {
-          await mkdir(localDir, { recursive: true });
-        }
-        await writeFile(localPath, buffer);
-        app.log.info(`[image-proxy] Cached → ${relativePath}`);
-      } catch (cacheErr) {
-        app.log.warn(`[image-proxy] Cache write failed: ${cacheErr.message}`);
-      }
-
-      return reply.type(contentType).send(buffer);
-    } catch (err) {
-      app.log.warn(`[image-proxy] Failed ${request.url}: ${err.message}`);
-      return reply.status(404).send({ error: 'Image not available' });
-    }
-  });
-
+if (remoteUploadBase) {
   app.log.info(`Image proxy enabled → ${remoteUploadBase}`);
 }
 
