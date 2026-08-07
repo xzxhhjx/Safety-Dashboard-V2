@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
-import { join, extname, dirname } from 'node:path';
+import { join, extname, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -26,7 +26,8 @@ await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
 
 // Serve uploaded photos and proxy fallback
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const uploadRoot = join(__dirname, '..', config.uploadDir);
+// resolve config.uploadDir relative to server/ (__dirname/..) — handles both absolute and relative paths
+const uploadRoot = resolve(__dirname, '..', config.uploadDir);
 const remoteUploadBase = process.env.REMOTE_UPLOAD_BASE || '';
 
 const MIME_TYPES = {
