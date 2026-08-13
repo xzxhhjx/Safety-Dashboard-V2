@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { classifyBatchStream, aiPause, aiResume, aiCancel } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 import { Pause, Play, Square, Image, Tag, User, MapPin } from 'lucide-react';
 
 const LOG_COLORS = {
@@ -13,6 +14,7 @@ const LOG_COLORS = {
 };
 
 export default function AIClassifyPanel() {
+  const { t } = useLanguage();
   const [provider, setProvider] = useState('gemini');
   const [scope, setScope] = useState('unanalyzed');
   const [running, setRunning] = useState(false);
@@ -46,9 +48,9 @@ export default function AIClassifyPanel() {
             setProgress({ current: 0, total: event.total, done: 0, errors: 0 });
             addLog(event.message, event.providerAvailable ? 'info' : 'warn');
             if (!event.providerAvailable) {
-              addLog(`${event.provider.toUpperCase()} API key 未配置，将使用关键词匹配（低精度）`, 'warn');
+              addLog(`${event.provider.toUpperCase()} ${t('ai.keyMissing')}`, 'warn');
             }
-            addLog(`Provider: ${event.provider}, Scope: ${event.scope}, Total: ${event.total} records`, 'info');
+            addLog(t('ai.providerLine', { p: event.provider, s: event.scope, n: event.total }), 'info');
             break;
 
           case 'classifying':
@@ -74,7 +76,7 @@ export default function AIClassifyPanel() {
 
           case 'paused':
             setPaused(true); setCurrentItem(null);
-            addLog(`⏸ Paused at ${event.done}/${event.total}`, 'pause');
+            addLog(t('ai.pausedAt', { done: event.done, total: event.total }), 'pause');
             break;
 
           case 'cancelled':
@@ -88,18 +90,18 @@ export default function AIClassifyPanel() {
             setCurrentItem(null);
             setProgress({ current: event.total, total: event.total, done: event.done, errors: event.errors });
             setResult({ done: event.done, total: event.total, skipped: event.skipped, errors: event.errors });
-            addLog(`Complete! ${event.done} classified, ${event.skipped} skipped, ${event.errors} errors`, 'done');
+            addLog(t('ai.complete', { done: event.done, skipped: event.skipped, errors: event.errors }), 'done');
             setRunning(false); setPaused(false);
             break;
 
           case 'error':
-            addLog(`Fatal error: ${event.message}`, 'error');
+            addLog(t('ai.fatal', { msg: event.message }), 'error');
             setRunning(false); setPaused(false);
             break;
         }
       }
     } catch (err) {
-      addLog(`Connection error: ${err.message}`, 'error');
+      addLog(t('ai.connError', { msg: err.message }), 'error');
     } finally {
       setRunning(false); setPaused(false);
     }
@@ -119,12 +121,12 @@ export default function AIClassifyPanel() {
   return (
     <div className="card mb-6">
       <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-        AI Classification
+        {t('ai.title')}
       </h2>
 
       <div className="flex gap-4 items-end flex-wrap">
         <label className="flex flex-col gap-1">
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Provider</span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('ai.provider')}</span>
           <select value={provider} onChange={e => setProvider(e.target.value)} disabled={running}
             className="input-apple" style={{ minWidth: 160 }}>
             <option value="gemini">Gemini (Google)</option>
@@ -133,19 +135,19 @@ export default function AIClassifyPanel() {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Scope</span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('ai.scope')}</span>
           <select value={scope} onChange={e => setScope(e.target.value)} disabled={running}
             className="input-apple" style={{ minWidth: 200 }}>
-            <option value="last50">Last 50 Records (Test)</option>
-            <option value="unanalyzed">Unanalyzed Records</option>
-            <option value="others">"Others" Classification Only</option>
-            <option value="all">All Records</option>
+            <option value="last50">{t('ai.scopeLast50')}</option>
+            <option value="unanalyzed">{t('ai.scopeUnanalyzed')}</option>
+            <option value="others">{t('ai.scopeOthers')}</option>
+            <option value="all">{t('ai.scopeAll')}</option>
           </select>
         </label>
 
         {!running && (
           <button onClick={handleStart} className="btn-primary" style={{ background: 'var(--system-purple)' }}>
-            {result ? 'Start New Run' : 'Start AI Analysis'}
+            {result ? t('ai.startNew') : t('ai.start')}
           </button>
         )}
 
@@ -153,15 +155,15 @@ export default function AIClassifyPanel() {
           <>
             {!paused ? (
               <button onClick={handlePause} className="btn-secondary" style={{ color: 'var(--system-orange)' }}>
-                <Pause className="w-4 h-4" /> Pause
+                <Pause className="w-4 h-4" /> {t('ai.pause')}
               </button>
             ) : (
               <button onClick={handleResume} className="btn-primary" style={{ background: 'var(--system-green)' }}>
-                <Play className="w-4 h-4" /> Resume
+                <Play className="w-4 h-4" /> {t('ai.resume')}
               </button>
             )}
             <button onClick={handleCancel} className="btn-secondary" style={{ color: 'var(--system-red)' }}>
-              <Square className="w-4 h-4" /> Cancel
+              <Square className="w-4 h-4" /> {t('ai.cancel')}
             </button>
           </>
         )}
@@ -172,10 +174,10 @@ export default function AIClassifyPanel() {
           <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
             <span>
               {progress.done !== undefined
-                ? `${progress.done} / ${progress.total} classified`
+                ? t('ai.classified', { done: progress.done, total: progress.total })
                 : `${progress.current} / ${progress.total}`}
-              {paused && ' · ⏸ PAUSED'}
-              {progress.errors > 0 && ` · ${progress.errors} errors`}
+              {paused && ` · ⏸ ${t('ai.paused')}`}
+              {progress.errors > 0 && ` · ${t('ai.errorsN', { n: progress.errors })}`}
             </span>
             <span>{pct}%</span>
           </div>
@@ -192,7 +194,7 @@ export default function AIClassifyPanel() {
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--system-purple)' }} />
             <span className="text-xs font-semibold" style={{ color: 'var(--system-purple)' }}>
-              Classifying {currentItem.index}/{currentItem.total}
+              {t('ai.classifying', { index: currentItem.index, total: currentItem.total })}
             </span>
             <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>· {currentItem.docId}</span>
             {currentItem.hasImages > 0 && (
@@ -202,7 +204,7 @@ export default function AIClassifyPanel() {
             )}
           </div>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-            {currentItem.description || <span className="italic" style={{ color: 'var(--text-tertiary)' }}>No description</span>}
+            {currentItem.description || <span className="italic" style={{ color: 'var(--text-tertiary)' }}>{t('ai.noDescription')}</span>}
           </p>
           <div className="flex gap-3 mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             {currentItem.hazard && <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {currentItem.hazard}</span>}

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { fetchAwards, updateAwards } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AwardsManager() {
+  const { t } = useLanguage();
   const [awards, setAwards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,7 +20,7 @@ export default function AwardsManager() {
   };
 
   const addNew = () => {
-    const name = prompt('Team name:');
+    const name = prompt(t('awards.teamName'));
     if (name) setAwards(prev => [...prev, { id: name, score: 0, level: 'normal' }]);
   };
 
@@ -26,26 +28,26 @@ export default function AwardsManager() {
     setSaving(true);
     try {
       await updateAwards(awards);
-      alert('Saved!');
+      alert(t('awards.saved'));
     } catch (err) {
-      alert('Error: ' + (err.response?.data?.error || err.message));
+      alert(t('awards.errorPrefix') + (err.response?.data?.error || err.message));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <div className="card" style={{ color: 'var(--text-secondary)' }}>Loading awards...</div>;
+  if (loading) return <div className="card" style={{ color: 'var(--text-secondary)' }}>{t('awards.loading')}</div>;
 
   return (
     <div className="card mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-          Safety Awards
+          {t('awards.title')}
         </h2>
         <div className="flex gap-2">
-          <button onClick={addNew} className="btn-secondary">+ Add</button>
+          <button onClick={addNew} className="btn-secondary">{t('awards.add')}</button>
           <button onClick={save} disabled={saving} className="btn-primary">
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? t('awards.saving') : t('awards.save')}
           </button>
         </div>
       </div>
@@ -53,9 +55,9 @@ export default function AwardsManager() {
       <table className="data-table w-full">
         <thead>
           <tr>
-            <th>Team</th>
-            <th>Score</th>
-            <th>Level</th>
+            <th>{t('awards.team')}</th>
+            <th>{t('awards.score')}</th>
+            <th>{t('awards.level')}</th>
           </tr>
         </thead>
         <tbody>
@@ -78,9 +80,9 @@ export default function AwardsManager() {
                   className="input-apple"
                   style={{ height: 32, fontSize: 13 }}
                 >
-                  <option value="gold">Gold</option>
-                  <option value="silver">Silver</option>
-                  <option value="normal">Normal</option>
+                  <option value="gold">{t('awards.gold')}</option>
+                  <option value="silver">{t('awards.silver')}</option>
+                  <option value="normal">{t('awards.normal')}</option>
                 </select>
               </td>
             </tr>

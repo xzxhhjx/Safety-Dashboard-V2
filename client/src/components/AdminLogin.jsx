@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { login, setToken } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AdminLogin({ onSuccess }) {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export default function AdminLogin({ onSuccess }) {
       setToken(token);
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || t('login.failed'));
     } finally {
       setLoading(false);
     }
@@ -26,11 +28,11 @@ export default function AdminLogin({ onSuccess }) {
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
       <div className="card w-full max-w-sm">
         <h1 className="text-xl font-semibold mb-6 text-center" style={{ color: 'var(--text-primary)' }}>
-          Admin Login
+          {t('login.title')}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Username</label>
+            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{t('login.username')}</label>
             <input
               type="text"
               value={username}
@@ -40,7 +42,7 @@ export default function AdminLogin({ onSuccess }) {
             />
           </div>
           <div>
-            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>Password</label>
+            <label className="block text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>{t('login.password')}</label>
             <input
               type="password"
               value={password}
@@ -50,7 +52,7 @@ export default function AdminLogin({ onSuccess }) {
           </div>
           {error && <p className="text-sm" style={{ color: 'var(--system-red)' }}>{error}</p>}
           <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('login.signingIn') : t('login.signIn')}
           </button>
         </form>
       </div>

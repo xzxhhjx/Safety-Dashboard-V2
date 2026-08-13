@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { uploadExcelStream } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ExcelUpload() {
+  const { t } = useLanguage();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -22,7 +24,7 @@ export default function ExcelUpload() {
     setLogs([]);
     setProgress(null);
     setResult(null);
-    addLog(`Starting upload: ${file.name}`, 'header');
+    addLog(t('upload.starting', { name: file.name }), 'header');
 
     try {
       for await (const event of uploadExcelStream(file)) {
@@ -60,17 +62,17 @@ export default function ExcelUpload() {
               errors: event.errors,
             });
             addLog(
-              `Complete! ${event.inserted} new, ${event.updated} status updated, ${event.skipped} skipped, ${event.imagesDownloaded} images${event.errors ? `, ${event.errors} errors` : ''}`,
+              t('upload.complete', { inserted: event.inserted, updated: event.updated, skipped: event.skipped, images: event.imagesDownloaded, errors: event.errors ? t('upload.errorsSuffix', { n: event.errors }) : '' }),
               'done'
             );
             break;
           case 'error':
-            addLog(`Upload failed: ${event.message}`, 'error');
+            addLog(t('upload.failed', { msg: event.message }), 'error');
             break;
         }
       }
     } catch (err) {
-      addLog(`Error: ${err.message}`, 'error');
+      addLog(t('upload.error', { msg: err.message }), 'error');
     } finally {
       setLoading(false);
     }
@@ -87,7 +89,7 @@ export default function ExcelUpload() {
   return (
     <div className="card mb-6">
       <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-        Upload Excel Data
+        {t('upload.title')}
       </h2>
 
       <div className="flex gap-4 items-center">
@@ -108,7 +110,7 @@ export default function ExcelUpload() {
           disabled={!file || loading}
           className="btn-primary"
         >
-          {loading ? 'Processing...' : 'Upload & Sync'}
+          {loading ? t('upload.processing') : t('upload.uploadSync')}
         </button>
       </div>
 
@@ -117,10 +119,16 @@ export default function ExcelUpload() {
           <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
             <span>
               {progress.inserted !== undefined
-                ? `${progress.inserted} new${progress.updated > 0 ? ` · ${progress.updated} updated` : ''}${progress.skipped > 0 ? ` · ${progress.skipped} skipped` : ''}`
+                ? (
+                  <>
+                    {t('upload.newN', { n: progress.inserted })}
+                    {progress.updated > 0 && ` · ${t('upload.updatedN', { n: progress.updated })}`}
+                    {progress.skipped > 0 && ` · ${t('upload.skippedN', { n: progress.skipped })}`}
+                  </>
+                )
                 : `${progress.current} / ${progress.total}`}
-              {progress.images > 0 && ` · ${progress.images} images`}
-              {progress.errors > 0 && ` · ${progress.errors} errors`}
+              {progress.images > 0 && ` · ${t('upload.imagesN', { n: progress.images })}`}
+              {progress.errors > 0 && ` · ${t('upload.errorsN', { n: progress.errors })}`}
             </span>
             <span>{pct}%</span>
           </div>
