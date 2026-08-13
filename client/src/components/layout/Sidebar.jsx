@@ -1,11 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, ClipboardList, Shield, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, BarChart3, ClipboardList, Shield, Sun, Moon, Clock, HardHat } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const NAV_ITEMS = [
   { path: '/',              label: 'Overview',        icon: LayoutDashboard },
   { path: '/analytics',     label: 'Analytics',       icon: BarChart3 },
   { path: '/observations',  label: 'Observations',    icon: ClipboardList },
+];
+
+const EXTERNAL_NAV_ITEMS = [
+  { label: '加班申请系统', icon: Clock,   href: 'https://tcc-ytl-ot.vercel.app/overtime' },
+  { label: '施工日报系统', icon: HardHat, href: 'https://tcc-ytl-ot.vercel.app/daily-home' },
 ];
 
 export default function Sidebar() {
@@ -46,6 +51,19 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {EXTERNAL_NAV_ITEMS.map(item => (
+          <a
+            key={item.href}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-nav-item"
+          >
+            <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+            <span>{item.label}</span>
+          </a>
+        ))}
       </nav>
 
       {/* Bottom — macOS Appearance Switcher */}
