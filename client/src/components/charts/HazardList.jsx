@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Hazard category accordion list — companion to HazardChart donut.
@@ -46,6 +47,7 @@ export default function HazardList({ categories, onItemClick }) {
 }
 
 function HazardListItem({ item, percentage, subs, hasSubs, onItemClick }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const subId = 'hazardSub_' + item.name.replace(/[^a-zA-Z0-9一-鿿]/g, '_');
 
@@ -95,7 +97,7 @@ function HazardListItem({ item, percentage, subs, hasSubs, onItemClick }) {
             <li
               key={sub.name}
               className="text-[11px] text-slate-500 flex justify-between items-start py-1 border-b border-slate-100/50 last:border-0 hover:bg-slate-50/50 rounded px-1 cursor-pointer"
-              title={`点击筛选: ${sub.name}`}
+              title={`${t('hazardList.filterBy')}: ${sub.name}`}
               onClick={e => { e.stopPropagation(); onItemClick?.('hazard', sub.name); }}
             >
               <span className="break-all pr-2">{sub.name}</span>

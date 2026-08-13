@@ -1,14 +1,17 @@
 import BaseChart from './BaseChart';
 import { CHART_COLORS } from '../../config';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Work Area Distribution — Apple-style horizontal bar chart.
  */
 export default function AreaChart({ data }) {
+  const { t } = useLanguage();
+
   if (!data?.length) {
     return (
       <div className="chart-container-tall flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-        No data
+        {t('common.noData')}
       </div>
     );
   }

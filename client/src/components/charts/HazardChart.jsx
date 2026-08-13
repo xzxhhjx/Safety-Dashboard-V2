@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import BaseChart from './BaseChart';
 import { CHART_COLORS } from '../../config';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Hazard Distribution — Donut chart matching original Safety-Dashboard style.
@@ -11,6 +12,8 @@ import { CHART_COLORS } from '../../config';
  * - Returns processed categories for the accordion list
  */
 export default function HazardChart({ data, subData, limit = 'all', onProcessed }) {
+  const { t } = useLanguage();
+
   const chartData = useMemo(() => {
     if (!data?.length) return [];
 
@@ -69,12 +72,12 @@ export default function HazardChart({ data, subData, limit = 'all', onProcessed 
         formatter(params) {
           return `<div style="font-weight:bold">${params.name}</div>
                   <div style="color:#64748b">${params.data.cn || ''}</div>
-                  <div>${params.value} 项 (${params.percent}%)</div>`;
+                  <div>${params.value} ${t('common.items')} (${params.percent}%)</div>`;
         },
       },
       legend: { show: false },
       series: [{
-        name: '隐患分类',
+        name: t('charts.hazardSeries'),
         type: 'pie',
         radius: ['45%', '70%'],
         center: ['50%', '50%'],
@@ -89,12 +92,12 @@ export default function HazardChart({ data, subData, limit = 'all', onProcessed 
         data: seriesData,
       }],
     };
-  }, [chartData]);
+  }, [chartData, t]);
 
   if (!chartData.length) {
     return (
       <div className="flex items-center justify-center h-full" style={{ color: '#94a3b8', fontSize: 13 }}>
-        No data
+        {t('common.noData')}
       </div>
     );
   }

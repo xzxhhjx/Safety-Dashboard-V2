@@ -1,8 +1,11 @@
 import BaseChart from './BaseChart';
 import { CHART_COLORS } from '../../config';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SubmitterChart({ data }) {
-  if (!data?.length) return <div className="chart-container flex items-center justify-center text-gray-600">No data</div>;
+  const { t } = useLanguage();
+
+  if (!data?.length) return <div className="chart-container flex items-center justify-center text-gray-600">{t('common.noData')}</div>;
 
   const option = {
     tooltip: { trigger: 'axis' },

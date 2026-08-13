@@ -1,10 +1,14 @@
+import { useLanguage } from '../../context/LanguageContext';
+
 /**
  * Top Submitters — Apple Reminders-style list.
  * Avatar circle (first letter) + name + submission count.
  */
 export default function SubmitterRankingList({ data }) {
+  const { t } = useLanguage();
+
   if (!data?.length) {
-    return <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No data</div>;
+    return <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{t('common.noData')}</div>;
   }
 
   const AVATAR_COLORS = [

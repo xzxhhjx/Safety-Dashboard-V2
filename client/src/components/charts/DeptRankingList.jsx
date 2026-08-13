@@ -1,10 +1,14 @@
+import { useLanguage } from '../../context/LanguageContext';
+
 /**
  * Department Ranking — Apple-style horizontal progress bars.
  * Compact list with department name, progress bar, count + percentage.
  */
 export default function DeptRankingList({ data }) {
+  const { t } = useLanguage();
+
   if (!data?.length) {
-    return <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No data</div>;
+    return <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{t('common.noData')}</div>;
   }
 
   const items = data.slice(0, 8);

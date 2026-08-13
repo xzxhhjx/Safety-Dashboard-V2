@@ -1,14 +1,17 @@
 import BaseChart from './BaseChart';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Safety Trend — Thin Apple-style line chart.
  * 2px blue line, subtle 8% area fill, no heavy gridlines.
  */
 export default function MonthlyTrendChart({ data }) {
+  const { t } = useLanguage();
+
   if (!data?.length) {
     return (
       <div className="chart-container-wide flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-        No data
+        {t('common.noData')}
       </div>
     );
   }
@@ -64,15 +67,15 @@ export default function MonthlyTrendChart({ data }) {
       {/* Summary stats */}
       <div className="flex gap-6 mb-3">
         <div>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Total </span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('charts.total')} </span>
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{total}</span>
         </div>
         <div>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Monthly Avg </span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('charts.monthlyAvg')} </span>
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{avg}</span>
         </div>
         <div>
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Peak </span>
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('charts.peak')} </span>
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{peak}</span>
         </div>
       </div>

@@ -1,14 +1,17 @@
 import { CHART_COLORS } from '../../config';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Top Risk Categories — Apple Reminders-style horizontal progress bars.
  * Replaces the WordCloud for a more professional enterprise look.
  */
 export default function TopRiskBars({ data }) {
+  const { t } = useLanguage();
+
   if (!data?.length) {
     return (
       <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-        No data
+        {t('common.noData')}
       </div>
     );
   }

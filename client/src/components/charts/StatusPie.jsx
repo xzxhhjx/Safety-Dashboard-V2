@@ -1,11 +1,14 @@
 import BaseChart from './BaseChart';
 import { COLORS } from '../../config';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Status Overview — Two-slice donut: 已关闭 (Closed) vs 未关闭 (Open).
  * Center shows the closed rate percentage.
  */
 export default function StatusPie({ totalCount, closedRate }) {
+  const { t } = useLanguage();
+
   const total = totalCount || 0;
   const closedPct = closedRate || 0;
   const closedCount = Math.round(total * closedPct / 100);
@@ -14,14 +17,14 @@ export default function StatusPie({ totalCount, closedRate }) {
   if (total === 0) {
     return (
       <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-        No data
+        {t('common.noData')}
       </div>
     );
   }
 
   const pieData = [
-    { name: '已关闭', value: closedCount, itemStyle: { color: COLORS.SAFE } },
-    { name: '未关闭', value: openCount, itemStyle: { color: COLORS.DANGER } },
+    { name: t('charts.closed'), value: closedCount, itemStyle: { color: COLORS.SAFE } },
+    { name: t('charts.open'), value: openCount, itemStyle: { color: COLORS.DANGER } },
   ];
 
   const option = {
@@ -31,7 +34,7 @@ export default function StatusPie({ totalCount, closedRate }) {
       borderColor: 'rgba(0, 0, 0, 0.08)',
       textStyle: { color: '#1D1D1F', fontSize: 13, fontFamily: 'inherit' },
       formatter: (p) =>
-        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} 项 (${p.percent}%)</span>`,
+        `<b>${p.name}</b><br/><span style="color:#6E6E73">${p.value} ${t('common.items')} (${p.percent}%)</span>`,
     },
     graphic: [
       {
@@ -52,7 +55,7 @@ export default function StatusPie({ totalCount, closedRate }) {
         left: 'center',
         top: '58%',
         style: {
-          text: '关闭率',
+          text: t('charts.closeRate'),
           textAlign: 'center',
           fill: '#6E6E73',
           fontSize: 12,

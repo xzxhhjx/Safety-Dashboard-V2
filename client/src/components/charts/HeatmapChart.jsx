@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import BaseChart from './BaseChart';
+import { useLanguage } from '../../context/LanguageContext';
 
 /**
  * Area × Hazard Category Heatmap — matches original Safety-Dashboard heatmap.
@@ -10,6 +11,8 @@ import BaseChart from './BaseChart';
  * Click: returns { area, hazard } for drill-down filtering
  */
 export default function HeatmapChart({ data, onCellClick }) {
+  const { t } = useLanguage();
+
   const { areas, hazards, seriesData, maxVal } = useMemo(() => {
     if (!data?.length) return { areas: [], hazards: [], seriesData: [], maxVal: 5 };
 
@@ -77,7 +80,7 @@ export default function HeatmapChart({ data, onCellClick }) {
                   <div style="font-weight:600;font-size:13px;margin-bottom:4px">${areaName}</div>
                   <div style="display:flex;align-items:center;gap:6px">
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${params.color}"></span>
-                    <span style="font-weight:600">${count} 项</span>
+                    <span style="font-weight:600">${count} ${t('common.items')}</span>
                   </div>`;
         },
       },
@@ -119,7 +122,7 @@ export default function HeatmapChart({ data, onCellClick }) {
         bottom: 4,
         itemWidth: 24,
         itemHeight: 200,
-        text: ['高', '低'],
+        text: [t('charts.high'), t('charts.low')],
         textStyle: { color: '#6E6E73', fontSize: 11, fontFamily: 'inherit' },
         inRange: {
           color: ['#F5F5F7', '#DBEAFE', '#93C5FD', '#3B82F6', '#1D4ED8', '#1E3A5F'],
@@ -149,7 +152,7 @@ export default function HeatmapChart({ data, onCellClick }) {
         },
       }],
     };
-  }, [areas, hazards, seriesData, maxVal]);
+  }, [areas, hazards, seriesData, maxVal, t]);
 
   const handleClick = (params) => {
     if (onCellClick && params.data) {
@@ -163,7 +166,7 @@ export default function HeatmapChart({ data, onCellClick }) {
   if (!seriesData.length) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: 320, color: '#94a3b8', fontSize: 13 }}>
-        No heatmap data
+        {t('charts.noHeatmap')}
       </div>
     );
   }
