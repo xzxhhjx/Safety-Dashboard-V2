@@ -3,9 +3,11 @@ import Toolbar from '../components/layout/Toolbar';
 import FilterBar from '../components/FilterBar';
 import DataTable from '../components/DataTable';
 import { useObservations } from '../hooks/useObservations';
+import { useLanguage } from '../context/LanguageContext';
 import { Download } from 'lucide-react';
 
 export default function Observations() {
+  const { t } = useLanguage();
   const [filters, setFilters] = useState({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -33,13 +35,13 @@ export default function Observations() {
   return (
     <div>
       <Toolbar
-        title="Observations"
-        subtitle="Complete safety observation records"
+        title={t('observations.title')}
+        subtitle={t('observations.subtitle')}
         filters={filters}
         onFilterChange={f => { setFilters(f); setPage(1); }}
         actions={
           <button onClick={handleExport} className="btn-secondary">
-            <Download className="w-3.5 h-3.5" /> Export CSV
+            <Download className="w-3.5 h-3.5" /> {t('common.exportCsv')}
           </button>
         }
       />
