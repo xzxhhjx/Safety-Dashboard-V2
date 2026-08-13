@@ -2,21 +2,9 @@ import { useState, useCallback } from 'react';
 import ImageModal from './ImageModal';
 import Badge from './ui/Badge';
 import { ChevronLeft, ChevronRight, Download, Image } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
-
-const DEFAULT_COLUMNS = [
-  { key: 'obs_time', label: '提交时间', width: 150 },
-  { key: 'submitter', label: '提交人', width: 90 },
-  { key: 'dept', label: '提交人部门', width: 120 },
-  { key: 'area', label: '隐患所在区域', width: 130 },
-  { key: 'obs_type', label: '属性', width: 72 },
-  { key: 'hazard', label: '隐患类型', width: 140 },
-  { key: 'description', label: '描述', width: 200 },
-  { key: 'measures', label: '采取的措施', width: 160 },
-  { key: 'status', label: '当前状态', width: 100 },
-  { key: 'photos', label: '图片', width: 70 },
-];
 
 export default function DataTable({
   data, total, page, pageSize, onPageChange, onPageSizeChange, loading,
@@ -25,8 +13,22 @@ export default function DataTable({
 }) {
   const [modal, setModal] = useState({ open: false, images: [], index: 0 });
   const [selected, setSelected] = useState(new Set());
+  const { t } = useLanguage();
   const totalPages = Math.ceil(total / pageSize);
-  const cols = columns || DEFAULT_COLUMNS;
+
+  const defaultColumns = [
+    { key: 'obs_time',   label: t('table.col.time'),        width: 150 },
+    { key: 'submitter',  label: t('table.col.submitter'),   width: 90 },
+    { key: 'dept',       label: t('table.col.dept'),        width: 120 },
+    { key: 'area',       label: t('table.col.area'),        width: 130 },
+    { key: 'obs_type',   label: t('table.col.obsType'),     width: 72 },
+    { key: 'hazard',     label: t('table.col.hazard'),      width: 140 },
+    { key: 'description',label: t('table.col.description'), width: 200 },
+    { key: 'measures',   label: t('table.col.measures'),    width: 160 },
+    { key: 'status',     label: t('table.col.status'),      width: 100 },
+    { key: 'photos',     label: t('table.col.photos'),      width: 70 },
+  ];
+  const cols = columns || defaultColumns;
 
   const toggleSelect = useCallback((id) => {
     setSelected(prev => {
@@ -60,7 +62,7 @@ export default function DataTable({
             background: isSafe ? 'rgba(52,199,89,0.12)' : isUnsafe ? 'rgba(255,69,58,0.12)' : 'rgba(142,142,147,0.12)',
             color: isSafe ? '#248A3D' : isUnsafe ? '#C44235' : '#5C5C5E',
           }}>
-            {isSafe ? 'Safe' : isUnsafe ? 'Risk' : '—'}
+            {isSafe ? t('table.safe') : isUnsafe ? t('table.risk') : '—'}
           </span>
         );
       }
@@ -86,10 +88,10 @@ export default function DataTable({
             className="btn-secondary flex items-center gap-1"
             style={{ padding: '4px 10px', height: 28, fontSize: 12, whiteSpace: 'nowrap' }}
             onClick={() => setModal({ open: true, images: row.photos.filter(p => p && !p.startsWith('__FAILED')), index: 0 })}
-            title="点击查看图片"
+            title={t('table.viewPhotosTitle')}
           >
             <Image className="w-3.5 h-3.5" />
-            查看
+            {t('table.viewPhotos')}
           </button>
         ) : (
           <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>—</span>
@@ -106,18 +108,18 @@ export default function DataTable({
       {(selectable || onExport) && (
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {selectable && selected.size > 0 && `${selected.size} selected`}
+            {selectable && selected.size > 0 && t('table.selected', { n: selected.size })}
           </div>
           {onExport && (
             <button onClick={onExport} className="btn-secondary text-xs">
-              <Download className="w-3.5 h-3.5" /> Export CSV
+              <Download className="w-3.5 h-3.5" /> {t('common.exportCsv')}
             </button>
           )}
         </div>
       )}
 
       {loading ? (
-        <div className="py-8 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading...</div>
+        <div className="py-8 text-center" style={{ color: 'var(--text-tertiary)' }}>{t('common.loading')}</div>
       ) : (
         <>
           <div className="overflow-x-auto" style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto' }}>
@@ -154,7 +156,7 @@ export default function DataTable({
                   <tr>
                     <td colSpan={cols.length + (selectable ? 1 : 0)} className="text-center"
                       style={{ color: 'var(--text-tertiary)', padding: '32px 0' }}>
-                      No records found
+                      {t('common.noRecords')}
                     </td>
                   </tr>
                 )}
@@ -167,10 +169,10 @@ export default function DataTable({
           <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <div className="flex items-center gap-3">
               <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                Page {page} of {totalPages || 1}
+                {t('table.pageOf', { page, total: totalPages || 1 })}
               </span>
               <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                Show
+                {t('common.show')}
                 <select value={pageSize} onChange={e => onPageSizeChange(Number(e.target.value))}
                   className="input-apple" style={{ padding: '2px 8px', height: 28, fontSize: 12 }}>
                   {PAGE_SIZE_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
@@ -179,10 +181,10 @@ export default function DataTable({
             </div>
             <div className="flex gap-2">
               <button onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="pagination-btn">
-                <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                <ChevronLeft className="w-3.5 h-3.5" /> {t('common.prev')}
               </button>
               <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="pagination-btn">
-                Next <ChevronRight className="w-3.5 h-3.5" />
+                {t('common.next')} <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
