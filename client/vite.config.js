@@ -14,4 +14,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  test: {
+    setupFiles: ['./vitest.setup.js'],
+  },
 });
