@@ -8,15 +8,16 @@ import MonthlyTrendChart from '../components/charts/MonthlyTrendChart';
 import AreaChart from '../components/charts/AreaChart';
 import DataTable from '../components/DataTable';
 import { useObservations } from '../hooks/useObservations';
-
-const TABS = [
-  { key: 'risk',       label: 'Risk' },
-  { key: 'trends',     label: 'Trends' },
-  { key: 'areas',      label: 'Areas' },
-  { key: 'people',     label: 'People' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Analytics() {
+  const { t } = useLanguage();
+  const TABS = [
+    { key: 'risk',   label: t('analytics.tab.risk') },
+    { key: 'trends', label: t('analytics.tab.trends') },
+    { key: 'areas',  label: t('analytics.tab.areas') },
+    { key: 'people', label: t('analytics.tab.people') },
+  ];
   const [activeTab, setActiveTab] = useState('risk');
   const [filters, setFilters] = useState({});
   const [drillDown, setDrillDown] = useState(null); // { area, hazard } from heatmap click
@@ -35,7 +36,7 @@ export default function Analytics() {
 
   return (
     <div>
-      <Toolbar title="Analytics" subtitle="Deep-dive into safety data" filters={filters} onFilterChange={setFilters} />
+      <Toolbar title={t('analytics.title')} subtitle={t('analytics.subtitle')} filters={filters} onFilterChange={setFilters} />
 
       <div className="px-6 py-6">
         {/* Tab Bar */}
@@ -49,9 +50,9 @@ export default function Analytics() {
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="section-title" style={{ marginBottom: 4 }}>区域-隐患热力图</h2>
+                  <h2 className="section-title" style={{ marginBottom: 4 }}>{t('analytics.heatmap')}</h2>
                   <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
-                    Heatmap Analysis (Areas vs Hazards) — click a cell to drill down
+                    {t('analytics.heatmapSubtitle')}
                   </p>
                 </div>
                 {drillDown && (
@@ -59,7 +60,7 @@ export default function Analytics() {
                     className="btn-secondary"
                     onClick={() => { setDrillDown(null); setDrillPage(1); }}
                   >
-                    Clear filter
+                    {t('analytics.clearFilter')}
                   </button>
                 )}
               </div>
@@ -70,7 +71,7 @@ export default function Analytics() {
             {drillDown && (
               <div className="card">
                 <h2 className="section-title">
-                  Records: {drillDown.area} — {drillDown.hazard}
+                  {t('analytics.records', { area: drillDown.area, hazard: drillDown.hazard })}
                 </h2>
                 <DataTable
                   data={observations}
@@ -90,20 +91,20 @@ export default function Analytics() {
         {activeTab === 'trends' && (
           <div className="space-y-6">
             <div className="card">
-              <h2 className="section-title">Monthly Observation Trend</h2>
+              <h2 className="section-title">{t('analytics.monthlyTrend')}</h2>
               <MonthlyTrendChart data={stats?.monthlyTrend?.map(d => ({ name: d.month, value: d.count }))} />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="card">
-                <h2 className="section-title">Week-over-Week Comparison</h2>
+                <h2 className="section-title">{t('analytics.wow')}</h2>
                 <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-                  Weekly data available with date range filter
+                  {t('analytics.wowHint')}
                 </div>
               </div>
               <div className="card">
-                <h2 className="section-title">Open vs Closed Trend</h2>
+                <h2 className="section-title">{t('analytics.openVsClosed')}</h2>
                 <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>
-                  Breakdown available with status filter
+                  {t('analytics.breakdownHint')}
                 </div>
               </div>
             </div>
@@ -114,11 +115,11 @@ export default function Analytics() {
         {activeTab === 'areas' && (
           <div className="space-y-6">
             <div className="card">
-              <h2 className="section-title">Top 10 Work Areas</h2>
+              <h2 className="section-title">{t('analytics.topAreas')}</h2>
               <AreaChart data={stats?.areaDist} />
             </div>
             <div className="card">
-              <h2 className="section-title">High-Risk Area Rankings</h2>
+              <h2 className="section-title">{t('analytics.highRiskAreas')}</h2>
               <TopRiskBars data={stats?.areaDist?.slice(0, 10)} />
             </div>
           </div>
@@ -128,13 +129,13 @@ export default function Analytics() {
         {activeTab === 'people' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
-              <h2 className="section-title">提交人</h2>
-              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>Submitters</p>
+              <h2 className="section-title">{t('analytics.submitters')}</h2>
+              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>{t('analytics.submitters')}</p>
               <TopRiskBars data={stats?.submitterRank} />
             </div>
             <div className="card">
-              <h2 className="section-title">提交人部门</h2>
-              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>Departments</p>
+              <h2 className="section-title">{t('analytics.depts')}</h2>
+              <p className="text-xs text-slate-400" style={{ marginBottom: 8 }}>{t('analytics.deptsSub')}</p>
               <TopRiskBars data={stats?.deptRank} />
             </div>
           </div>
