@@ -9,8 +9,8 @@ const NAV_ITEMS = [
 ];
 
 const EXTERNAL_NAV_ITEMS = [
-  { label: '加班申请系统', icon: Clock,   href: 'https://tcc-ytl-ot.vercel.app/overtime' },
-  { label: '施工日报系统', icon: HardHat, href: 'https://tcc-ytl-ot.vercel.app/daily-home' },
+  { label: '加班申请系统', icon: Clock,   path: '/overtime' },
+  { label: '施工日报系统', icon: HardHat, path: '/daily' },
 ];
 
 export default function Sidebar() {
@@ -52,18 +52,19 @@ export default function Sidebar() {
           );
         })}
 
-        {EXTERNAL_NAV_ITEMS.map(item => (
-          <a
-            key={item.href}
-            href={item.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sidebar-nav-item"
-          >
-            <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-            <span>{item.label}</span>
-          </a>
-        ))}
+        {EXTERNAL_NAV_ITEMS.map(item => {
+          const isActive = currentPath === item.path || currentPath.startsWith(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`sidebar-nav-item${isActive ? ' active' : ''}`}
+            >
+              <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom — macOS Appearance Switcher */}
