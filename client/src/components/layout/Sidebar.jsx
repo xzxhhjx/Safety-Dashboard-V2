@@ -1,22 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, ClipboardList, Shield, Sun, Moon, Clock, HardHat } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const NAV_ITEMS = [
-  { path: '/',              label: 'Overview',        icon: LayoutDashboard },
-  { path: '/analytics',     label: 'Analytics',       icon: BarChart3 },
-  { path: '/observations',  label: 'Observations',    icon: ClipboardList },
+  { path: '/',              labelKey: 'nav.overview',     icon: LayoutDashboard },
+  { path: '/analytics',     labelKey: 'nav.analytics',    icon: BarChart3 },
+  { path: '/observations',  labelKey: 'nav.observations', icon: ClipboardList },
 ];
 
 const EXTERNAL_NAV_ITEMS = [
-  { label: '加班申请系统', icon: Clock,   path: '/overtime' },
-  { label: '施工日报系统', icon: HardHat, path: '/daily' },
+  { labelKey: 'nav.overtime', icon: Clock,   path: '/overtime' },
+  { labelKey: 'nav.daily',   icon: HardHat, path: '/daily' },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { dark, toggle } = useTheme();
+  const { lang, setLang, t } = useLanguage();
 
   return (
     <aside className="sidebar">
@@ -29,7 +31,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>HSE Safety</div>
-            <div className="text-xs leading-tight" style={{ color: 'var(--text-secondary)' }}>Observation Platform</div>
+            <div className="text-xs leading-tight" style={{ color: 'var(--text-secondary)' }}>{t('brand.subtitle')}</div>
           </div>
         </div>
       </div>
@@ -47,7 +49,7 @@ export default function Sidebar() {
               className={`sidebar-nav-item${isActive ? ' active' : ''}`}
             >
               <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -61,7 +63,7 @@ export default function Sidebar() {
               className={`sidebar-nav-item${isActive ? ' active' : ''}`}
             >
               <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           );
         })}
@@ -70,12 +72,12 @@ export default function Sidebar() {
       {/* Bottom — macOS Appearance Switcher */}
       <div className="px-5 py-4" style={{ borderTop: '1px solid var(--border-subtle)', WebkitAppRegion: 'no-drag' }}>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>外观</span>
+          <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{t('appearance.label')}</span>
 
           {/* macOS Control Center style appearance toggle */}
           <div
             role="radiogroup"
-            aria-label="外观模式"
+            aria-label={t('appearance.mode')}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -111,7 +113,7 @@ export default function Sidebar() {
             {/* Light option */}
             <button
               onClick={() => dark && toggle()}
-              aria-label="日间模式"
+              aria-label={t('appearance.light')}
               aria-pressed={!dark}
               style={{
                 width: 28, height: 28, borderRadius: '50%',
@@ -131,7 +133,7 @@ export default function Sidebar() {
             {/* Dark option */}
             <button
               onClick={() => !dark && toggle()}
-              aria-label="夜间模式"
+              aria-label={t('appearance.dark')}
               aria-pressed={dark}
               style={{
                 width: 28, height: 28, borderRadius: '50%',
@@ -147,6 +149,26 @@ export default function Sidebar() {
                 style={{ color: dark ? '#1D1D1F' : 'rgba(255,255,255,0.55)', transition: 'color 0.2s ease' }}
               />
             </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3">
+          <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{t('language.label')}</span>
+          <div role="radiogroup" aria-label={t('language.label')} style={{ display: 'inline-flex', gap: 4 }}>
+            <button onClick={() => setLang('zh')} aria-pressed={lang === 'zh'}
+              style={{
+                padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border-subtle)',
+                fontSize: 12, cursor: 'pointer',
+                background: lang === 'zh' ? 'var(--system-blue)' : 'transparent',
+                color: lang === 'zh' ? '#fff' : 'var(--text-secondary)',
+              }}>中文</button>
+            <button onClick={() => setLang('en')} aria-pressed={lang === 'en'}
+              style={{
+                padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border-subtle)',
+                fontSize: 12, cursor: 'pointer',
+                background: lang === 'en' ? 'var(--system-blue)' : 'transparent',
+                color: lang === 'en' ? '#fff' : 'var(--text-secondary)',
+              }}>EN</button>
           </div>
         </div>
       </div>

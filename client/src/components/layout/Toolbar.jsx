@@ -1,4 +1,7 @@
+import { useLanguage } from '../../context/LanguageContext';
+
 export default function Toolbar({ title, subtitle, actions, filters, onFilterChange }) {
+  const { t } = useLanguage();
   const update = (key, value) => {
     if (onFilterChange) onFilterChange({ ...filters, [key]: value });
   };
@@ -13,7 +16,7 @@ export default function Toolbar({ title, subtitle, actions, filters, onFilterCha
         {onFilterChange && (
           <>
             <label className="flex items-center gap-1.5">
-              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>从</span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('toolbar.from')}</span>
               <input
                 type="date"
                 value={filters?.startDate || ''}
@@ -23,7 +26,7 @@ export default function Toolbar({ title, subtitle, actions, filters, onFilterCha
               />
             </label>
             <label className="flex items-center gap-1.5">
-              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>至</span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('toolbar.to')}</span>
               <input
                 type="date"
                 value={filters?.endDate || ''}
