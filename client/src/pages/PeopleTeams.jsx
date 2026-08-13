@@ -5,6 +5,7 @@ import TopRiskBars from '../components/charts/TopRiskBars';
 import DeptChart from '../components/charts/DeptChart';
 import SubmitterChart from '../components/charts/SubmitterChart';
 import { Users, Clock, Target, TrendingUp } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const AVATAR_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#FF453A', '#5856D6', '#FF6B35', '#00C7BE', '#AF52DE'];
 
@@ -14,6 +15,7 @@ function getInitials(name) {
 }
 
 export default function PeopleTeams() {
+  const { t } = useLanguage();
   const [filters] = useState({});
   const { stats, loading } = useStats(filters);
 
@@ -26,17 +28,17 @@ export default function PeopleTeams() {
 
   return (
     <div>
-      <Toolbar title="People & Teams" subtitle="Department performance and contributor insights" />
+      <Toolbar title={t('peopleTeams.title')} subtitle={t('peopleTeams.subtitle')} />
 
       <div className="px-6 py-6">
         {/* Department Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="card">
-            <h2 className="section-title">Department Performance</h2>
+            <h2 className="section-title">{t('peopleTeams.deptPerf')}</h2>
             <DeptChart data={stats?.deptRank} />
           </div>
           <div className="card">
-            <h2 className="section-title">Close Rate by Department</h2>
+            <h2 className="section-title">{t('peopleTeams.closeRateByDept')}</h2>
             <div className="flex flex-col gap-2">
               {deptPerf.map((d, i) => (
                 <div key={d.name} className="flex items-center gap-3">
@@ -54,7 +56,7 @@ export default function PeopleTeams() {
 
         {/* Top Contributors */}
         <div className="card mb-6">
-          <h2 className="section-title">Top Contributors</h2>
+          <h2 className="section-title">{t('peopleTeams.topContributors')}</h2>
           {stats?.submitterRank?.length > 0 ? (
             <div className="flex flex-col gap-1">
               {stats.submitterRank.slice(0, 10).map((s, i) => (
@@ -64,22 +66,22 @@ export default function PeopleTeams() {
                   <div className="avatar avatar-sm flex-shrink-0" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>{getInitials(s.name)}</div>
                   <span className="text-sm font-medium flex-1" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
                   <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--text-primary)' }}>{s.value}</span>
-                  <span className="text-xs flex-shrink-0" style={{ width: 80, textAlign: 'right', color: 'var(--text-secondary)' }}>submissions</span>
+                  <span className="text-xs flex-shrink-0" style={{ width: 80, textAlign: 'right', color: 'var(--text-secondary)' }}>{t('peopleTeams.submissions')}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>No contributor data</div>
+            <div className="chart-container flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>{t('peopleTeams.noContributors')}</div>
           )}
         </div>
 
         {/* Team Insights */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Avg Close Time', value: '3.2 days', icon: <Clock className="w-4 h-4" />, color: 'var(--system-blue)' },
-            { label: 'Per Person Avg', value: '18 obs', icon: <Users className="w-4 h-4" />, color: 'var(--system-green)' },
-            { label: 'Close Rate', value: `${stats?.closedRate || 0}%`, icon: <Target className="w-4 h-4" />, color: 'var(--system-orange)' },
-            { label: 'Active Submitters', value: stats?.submitterRank?.length || 0, icon: <TrendingUp className="w-4 h-4" />, color: 'var(--system-purple)' },
+            { label: t('peopleTeams.avgCloseTime'), value: '3.2 days', icon: <Clock className="w-4 h-4" />, color: 'var(--system-blue)' },
+            { label: t('peopleTeams.perPersonAvg'), value: '18 obs', icon: <Users className="w-4 h-4" />, color: 'var(--system-green)' },
+            { label: t('peopleTeams.closeRate'), value: `${stats?.closedRate || 0}%`, icon: <Target className="w-4 h-4" />, color: 'var(--system-orange)' },
+            { label: t('peopleTeams.activeSubmitters'), value: stats?.submitterRank?.length || 0, icon: <TrendingUp className="w-4 h-4" />, color: 'var(--system-purple)' },
           ].map(insight => (
             <div key={insight.label} className="card text-center" style={{ padding: '20px 16px' }}>
               <div className="mb-2 mx-auto" style={{ color: insight.color }}>{insight.icon}</div>

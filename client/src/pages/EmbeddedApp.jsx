@@ -1,6 +1,8 @@
 import { ExternalLink } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function EmbeddedApp({ title, src }) {
+  const { t } = useLanguage();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div
@@ -23,7 +25,7 @@ export default function EmbeddedApp({ title, src }) {
           style={{ margin: 0, width: 'auto' }}
         >
           <ExternalLink className="w-4 h-4 flex-shrink-0" />
-          <span>在新标签页打开</span>
+          <span>{t('embedded.openNewTab')}</span>
         </a>
       </div>
       <iframe

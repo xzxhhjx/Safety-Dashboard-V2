@@ -1,19 +1,22 @@
 import Toolbar from '../components/layout/Toolbar';
 import { Settings as SettingsIcon, Users, MapPin, Bell, Download, Palette } from 'lucide-react';
-
-const SETTING_SECTIONS = [
-  { icon: Users, label: 'User Management', desc: 'Coming soon' },
-  { icon: MapPin, label: 'Risk Category Configuration', desc: 'Coming soon' },
-  { icon: MapPin, label: 'Work Area Configuration', desc: 'Coming soon' },
-  { icon: Bell, label: 'Notification Rules', desc: 'Coming soon' },
-  { icon: Download, label: 'Export Settings', desc: 'Coming soon' },
-  { icon: Palette, label: 'System Preferences', desc: 'Coming soon' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Settings() {
+  const { t } = useLanguage();
+
+  const SETTING_SECTIONS = [
+    { icon: Users,    label: t('settings.userManagement'), desc: t('settings.comingSoon') },
+    { icon: MapPin,   label: t('settings.riskCategory'),   desc: t('settings.comingSoon') },
+    { icon: MapPin,   label: t('settings.workArea'),       desc: t('settings.comingSoon') },
+    { icon: Bell,     label: t('settings.notification'),   desc: t('settings.comingSoon') },
+    { icon: Download, label: t('settings.export'),         desc: t('settings.comingSoon') },
+    { icon: Palette,  label: t('settings.preferences'),    desc: t('settings.comingSoon') },
+  ];
+
   return (
     <div>
-      <Toolbar title="Settings" subtitle="Platform configuration" />
+      <Toolbar title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
       <div className="px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
